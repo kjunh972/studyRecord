@@ -23,4 +23,6 @@ export interface Todo {
   period: 'DAILY' | 'WEEKLY' | 'MONTHLY';
   completed: boolean;
   user: User;
-} 
+}
+
+export type TodoPeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY'; 

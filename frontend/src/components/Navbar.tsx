@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { ModeToggle } from './mebile-toggle'
-import { Button, AppBar, Toolbar, Box, Typography } from '@mui/material'
+import { ModeToggle } from './mode-toggle'
+import { AppBar, Toolbar, Box, Typography } from '@mui/material'
 import { BookOpen } from 'lucide-react'
 
 export default function Navbar() {

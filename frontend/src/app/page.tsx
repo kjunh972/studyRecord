@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { StudyRecord, Todo } from '../types'
 import TodoList from '../components/TodoList'
-import { Card, CardContent, Typography, CardHeader, Button, Box } from '@mui/material'
-import { PlusCircle } from 'lucide-react'
+import { Card, CardContent, Typography, Button, Box } from '@mui/material'
 import { studyRecordApi, todoApi } from '../services/api'
 
 export default function HomePage() {

@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { TextField, Button, Card, CardContent, CardHeader, Typography, IconButton } from '@mui/material'
-import DeleteIcon from '@mui/icons-material/Delete'
+import { TextField, Button, Card, CardContent, CardHeader, Typography } from '@mui/material'
 import MDEditor from '@uiw/react-md-editor'
 import { studyRecordApi } from '../../services/api'
 
