@@ -47,9 +47,20 @@ export default function StudyRecordPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <Card>
+      <Card sx={{ 
+        bgcolor: 'hsl(var(--card))',
+        color: 'hsl(var(--card-foreground))',
+        border: '1px solid hsl(var(--border))'
+      }}>
         <CardHeader
-          title={<Typography variant="h4">{record.title}</Typography>}
+          title={
+            <Typography 
+              variant="h4" 
+              sx={{ color: 'hsl(var(--foreground))' }}
+            >
+              {record.title}
+            </Typography>
+          }
           action={
             <IconButton onClick={() => setOpenDialog(true)} color="error">
               <DeleteIcon />

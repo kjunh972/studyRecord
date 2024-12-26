@@ -60,16 +60,17 @@ export default function HomePage() {
               key={record.id} 
               className="card-hover"
               sx={{ 
-                backgroundColor: '#1E1E1E',
-                borderRadius: '1rem',
-                border: '1px solid #333333',
+                bgcolor: 'hsl(var(--card))',
+                color: 'hsl(var(--card-foreground))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: 'var(--radius)'
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#FFFFFF' }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'hsl(var(--foreground))' }}>
                   {record.title}
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#888888', mb: 2 }}>
+                <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 2 }}>
                   {new Date(record.createdAt).toLocaleDateString()}
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
@@ -98,13 +99,13 @@ export default function HomePage() {
       </section>
 
       <section>
-        <Typography variant="h4" sx={{ fontWeight: 700, mb: 4, color: '#FFFFFF' }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, mb: 4, color: 'hsl(var(--foreground))' }}>
           To-Do List
         </Typography>
         <Card sx={{ 
-          backgroundColor: '#1E1E1E', 
-          borderRadius: '1rem',
-          border: '1px solid #333333',
+          bgcolor: 'hsl(var(--background))', 
+          borderRadius: 'var(--radius)',
+          border: '1px solid hsl(var(--border))',
           p: 3 
         }}>
           <TodoList todos={todos} setTodos={setTodos} />

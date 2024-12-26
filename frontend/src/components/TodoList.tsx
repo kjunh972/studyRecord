@@ -116,10 +116,10 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
             fullWidth
             sx={{
               '& .MuiOutlinedInput-root': {
-                backgroundColor: '#1A1A1A',
+                backgroundColor: 'hsl(var(--background))',
                 borderRadius: '8px',
                 '& fieldset': {
-                  borderColor: '#333'
+                  borderColor: 'hsl(var(--border))'
                 }
               }
             }}
@@ -137,10 +137,10 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
             sx={{
               width: '200px',
               '& .MuiOutlinedInput-root': {
-                backgroundColor: '#1A1A1A',
+                backgroundColor: 'hsl(var(--background))',
                 borderRadius: '8px',
                 '& fieldset': {
-                  borderColor: dateError ? 'error.main' : '#333'
+                  borderColor: dateError ? 'error.main' : 'hsl(var(--border))'
                 }
               }
             }}
@@ -151,10 +151,10 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
           onClick={addTodo}
           variant="contained" 
           sx={{ 
-            bgcolor: 'white', 
-            color: 'black',
+            bgcolor: 'hsl(var(--primary))', 
+            color: 'hsl(var(--primary-foreground))',
             '&:hover': {
-              bgcolor: '#E5E5E5'
+              bgcolor: 'hsl(var(--primary) / 0.9)'
             },
             borderRadius: '20px',
             textTransform: 'none',
@@ -171,25 +171,25 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
         sx={{ 
           mb: 2,
           '& .MuiTabs-indicator': {
-            backgroundColor: '#3B82F6'
+            backgroundColor: 'hsl(var(--primary))'
           }
         }}
       >
         <Tab 
           label="진행중" 
           sx={{ 
-            color: selectedTab === 0 ? '#3B82F6' : '#666',
+            color: selectedTab === 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
             '&.Mui-selected': {
-              color: '#3B82F6'
+              color: 'hsl(var(--primary))'
             }
           }}
         />
         <Tab 
           label={`완료됨 (${completedCount})`}
           sx={{ 
-            color: selectedTab === 1 ? '#3B82F6' : '#666',
+            color: selectedTab === 1 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
             '&.Mui-selected': {
-              color: '#3B82F6'
+              color: 'hsl(var(--primary))'
             }
           }}
         />
@@ -213,7 +213,7 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
                   p: 0.5,
                   borderRadius: '8px',
                   '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)'
+                    backgroundColor: 'hsl(var(--accent) / 0.1)'
                   }
                 }}
               >
@@ -227,9 +227,15 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
                     <KeyboardArrowDownIcon fontSize="small" />
                   )}
                 </IconButton>
-                <Typography sx={{ color: '#666', fontSize: '0.9rem' }}>
+                <Typography sx={{ 
+                  color: 'hsl(var(--muted-foreground))',
+                  fontSize: '0.9rem' 
+                }}>
                   {format(new Date(date), 'yyyy. MM. dd.')}
-                  <span style={{ marginLeft: '8px', color: '#888' }}>
+                  <span style={{ 
+                    marginLeft: '8px', 
+                    color: 'hsl(var(--muted-foreground))' 
+                  }}>
                     ({dateTodos.length})
                   </span>
                 </Typography>
@@ -247,7 +253,7 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
                         p: 1,
                         borderRadius: '8px',
                         '&:hover': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.05)'
+                          backgroundColor: 'hsl(var(--accent) / 0.1)'
                         }
                       }}
                     >
@@ -255,9 +261,9 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
                         checked={todo.completed}
                         onChange={() => toggleTodo(todo.id)}
                         sx={{
-                          color: '#666',
+                          color: 'hsl(var(--muted-foreground))',
                           '&.Mui-checked': {
-                            color: '#3B82F6'
+                            color: 'hsl(var(--primary))'
                           }
                         }}
                       />
@@ -265,7 +271,7 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
                         <Typography
                           sx={{
                             textDecoration: todo.completed ? 'line-through' : 'none',
-                            color: todo.completed ? '#666' : '#fff'
+                            color: todo.completed ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))'
                           }}
                         >
                           {todo.task}
@@ -275,9 +281,9 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
                         onClick={() => handleDeleteClick(todo.id)}
                         size="small"
                         sx={{ 
-                          color: '#666',
+                          color: 'hsl(var(--muted-foreground))',
                           '&:hover': {
-                            color: '#ef4444'
+                            color: 'hsl(var(--destructive))'
                           }
                         }}
                       >
@@ -291,14 +297,42 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
           ))}
       </Box>
 
-      <Dialog open={todoToDelete !== null} onClose={() => setTodoToDelete(null)}>
-        <DialogTitle>할 일 삭제</DialogTitle>
+      <Dialog 
+        open={todoToDelete !== null} 
+        onClose={() => setTodoToDelete(null)}
+        PaperProps={{
+          sx: {
+            bgcolor: 'hsl(var(--card))',
+            color: 'hsl(var(--card-foreground))',
+            border: '1px solid hsl(var(--border))'
+          }
+        }}
+      >
+        <DialogTitle sx={{ color: 'hsl(var(--foreground))' }}>
+          할 일 삭제
+        </DialogTitle>
         <DialogContent>
-          <Typography>이 할 일을 삭제하시겠습니까?</Typography>
+          <Typography sx={{ color: 'hsl(var(--foreground))' }}>
+            이 할 일을 삭제하시겠습니까?
+          </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setTodoToDelete(null)}>취소</Button>
-          <Button onClick={handleDeleteConfirm} color="error">
+          <Button 
+            onClick={() => setTodoToDelete(null)}
+            sx={{ color: 'hsl(var(--muted-foreground))' }}
+          >
+            취소
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            sx={{ 
+              bgcolor: 'hsl(var(--destructive))',
+              color: 'hsl(var(--destructive-foreground))',
+              '&:hover': {
+                bgcolor: 'hsl(var(--destructive) / 0.9)'
+              }
+            }}
+          >
             삭제
           </Button>
         </DialogActions>
