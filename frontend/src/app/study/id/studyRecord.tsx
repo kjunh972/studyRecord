@@ -133,21 +133,23 @@ export default function StudyRecordPage() {
               >
                 작성일: {new Date(record.createdAt).toLocaleDateString()}
               </Typography>
-              <div className="flex flex-wrap gap-2 mt-3">
-                {record.tags.map((tag) => (
-                  <span 
-                    key={tag} 
-                    className="px-3 py-1 rounded-full text-sm transition-all hover:scale-105"
-                    style={{
-                      backgroundColor: 'hsl(var(--primary) / 0.1)',
-                      color: 'hsl(var(--primary))',
-                      border: '1px solid hsl(var(--primary) / 0.2)'
-                    }}
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
+              {record.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {record.tags.map((tag) => (
+                    <span 
+                      key={tag} 
+                      className="px-3 py-1 rounded-full text-sm transition-all hover:scale-105"
+                      style={{
+                        backgroundColor: 'hsl(var(--primary) / 0.1)',
+                        color: 'hsl(var(--primary))',
+                        border: '1px solid hsl(var(--primary) / 0.2)'
+                      }}
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </>
           }
         />

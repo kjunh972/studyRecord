@@ -31,10 +31,29 @@ export default function HomePage() {
     fetchData()
   }, [])
 
+  // 날짜별로 레코드 그룹화하는 함수
+  const groupRecordsByDate = (records: StudyRecord[]) => {
+    const groups = records.reduce((acc, record) => {
+      const date = new Date(record.createdAt).toLocaleDateString();
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+      acc[date].push(record);
+      return acc;
+    }, {} as Record<string, StudyRecord[]>);
+    
+    // 날짜 기준 내림차순 정렬
+    return Object.entries(groups).sort((a, b) => 
+      new Date(b[0]).getTime() - new Date(a[0]).getTime()
+    );
+  };
+
   // 선택된 태그에 따라 레코드 필터링
   const filteredRecords = selectedTag
     ? studyRecords.filter(record => record.tags.includes(selectedTag))
     : studyRecords
+
+  const groupedRecords = groupRecordsByDate(filteredRecords);
 
   const handleTagClick = (tag: string) => {
     setSelectedTag(selectedTag === tag ? null : tag)
@@ -56,70 +75,95 @@ export default function HomePage() {
             to="/study/new"
             variant="contained"
             sx={{
-              backgroundColor: '#3B82F6',
-              '&:hover': { backgroundColor: '#2563EB' },
-              borderRadius: '0.5rem',
+              bgcolor: 'white',
+              color: '#000000',
+              '&:hover': {
+                bgcolor: 'rgba(255, 255, 255, 0.9)'
+              }
             }}
           >
-            New Record
+            NEW RECORD
           </Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredRecords.map((record) => (
-            <Card 
-              key={record.id} 
-              className="card-hover"
-              sx={{ 
-                bgcolor: 'hsl(var(--card))',
-                color: 'hsl(var(--card-foreground))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: 'var(--radius)'
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'hsl(var(--foreground))' }}>
-                  {record.title}
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 2 }}>
-                  {new Date(record.createdAt).toLocaleDateString()}
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
-                  {record.tags.map((tag) => (
-                    <Chip
-                      key={tag}
-                      label={tag}
-                      onClick={() => handleTagClick(tag)}
-                      sx={{
-                        bgcolor: selectedTag === tag 
-                          ? 'hsl(var(--primary))' 
-                          : 'hsl(var(--primary) / 0.1)',
-                        color: selectedTag === tag 
-                          ? 'hsl(var(--primary-foreground))' 
-                          : 'hsl(var(--primary))',
-                        cursor: 'pointer',
-                        '&:hover': {
-                          bgcolor: selectedTag === tag 
-                            ? 'hsl(var(--primary) / 0.9)' 
-                            : 'hsl(var(--primary) / 0.2)'
-                        }
-                      }}
-                    />
-                  ))}
-                </Box>
-                <Button
-                  component={Link}
-                  to={`/study/${record.id}`}
-                  sx={{
-                    color: '#3B82F6',
-                    '&:hover': { backgroundColor: 'rgba(59, 130, 246, 0.1)' },
-                    width: '100%',
-                    textAlign: 'center',
-                  }}
-                >
-                  Read more
-                </Button>
-              </CardContent>
-            </Card>
+        <div className="space-y-8">
+          {groupedRecords.map(([date, records]) => (
+            <div key={date}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: 'white',
+                  mb: 3,
+                  pb: 1,
+                  borderBottom: '1px solid hsl(var(--border))'
+                }}
+              >
+                {date}
+              </Typography>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {records.map((record) => (
+                  <Card 
+                    key={record.id} 
+                    className="card-hover"
+                    sx={{ 
+                      bgcolor: 'hsl(var(--card))',
+                      color: 'hsl(var(--card-foreground))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: 'var(--radius)'
+                    }}
+                  >
+                    <CardContent sx={{ p: 3 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'hsl(var(--foreground))' }}>
+                        {record.title}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 2 }}>
+                        {new Date(record.createdAt).toLocaleDateString()}
+                      </Typography>
+                      <Box sx={{ minHeight: '32px', mb: 2 }}>
+                        {record.tags.length > 0 ? (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                            {record.tags.map((tag) => (
+                              <Chip
+                                key={tag}
+                                label={`#${tag}`}
+                                onClick={() => handleTagClick(tag)}
+                                sx={{
+                                  bgcolor: selectedTag === tag ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.1)',
+                                  color: selectedTag === tag ? '#000000' : 'hsl(var(--primary))',
+                                  border: '1px solid hsl(var(--primary) / 0.2)',
+                                  cursor: 'pointer',
+                                  '&:hover': { transform: 'scale(1.05)' },
+                                  transition: 'all 0.2s'
+                                }}
+                              />
+                            ))}
+                          </Box>
+                        ) : (
+                          <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                            태그 없음
+                          </Typography>
+                        )}
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Button
+                          component={Link}
+                          to={`/study/${record.id}`}
+                          sx={{
+                            color: '#3B82F6',
+                            width: '100%',
+                            textAlign: 'center',
+                            '&:hover': { 
+                              backgroundColor: 'rgba(59, 130, 246, 0.1)'
+                            }
+                          }}
+                        >
+                          READ MORE
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </section>
