@@ -43,6 +43,9 @@ public class StudyRecord {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(nullable = false)
+    private String editorMode = "basic";
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

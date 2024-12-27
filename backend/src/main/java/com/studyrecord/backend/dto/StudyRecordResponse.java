@@ -19,6 +19,7 @@ public class StudyRecordResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private UserResponse user;
+    private String editorMode;
 
     public static StudyRecordResponse from(StudyRecord record) {
         return StudyRecordResponse.builder()
@@ -31,6 +32,7 @@ public class StudyRecordResponse {
                 .createdAt(record.getCreatedAt())
                 .updatedAt(record.getUpdatedAt())
                 .user(UserResponse.from(record.getUser()))
+                .editorMode(record.getEditorMode())
                 .build();
     }
 } 

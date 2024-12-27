@@ -8,6 +8,7 @@ export interface StudyRecord {
   id: number;
   title: string;
   content: string;
+  editorMode: 'basic' | 'markdown';
   tags: string[];
   references: string[];
   isPublic: boolean;

@@ -14,8 +14,12 @@ const api = axios.create({
 export const studyRecordApi = {
   getAll: () => api.get<StudyRecord[]>('/study-records'),
   getById: (id: number) => api.get<StudyRecord>(`/study-records/${id}`),
-  create: (record: Omit<StudyRecord, 'id' | 'createdAt' | 'updatedAt'>) => 
-    api.post<StudyRecord>('/study-records', record),
+  create: async (data: Omit<StudyRecord, 'id' | 'createdAt' | 'updatedAt'>) => {
+    console.log('API call data:', data)
+    const response = await api.post<StudyRecord>('/study-records', data)
+    console.log('API response:', response.data)
+    return response
+  },
   update: (id: number, record: Partial<StudyRecord>) => 
     api.put<StudyRecord>(`/study-records/${id}`, record),
   delete: (id: number) => api.delete(`/study-records/${id}`),

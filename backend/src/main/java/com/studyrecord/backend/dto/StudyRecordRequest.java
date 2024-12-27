@@ -7,6 +7,7 @@ import java.util.List;
 public class StudyRecordRequest {
     private String title;
     private String content;
+    private String editorMode;
     private List<String> tags;
     private List<String> references;
     private boolean isPublic;

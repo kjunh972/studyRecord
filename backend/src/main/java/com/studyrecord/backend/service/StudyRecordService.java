@@ -11,11 +11,14 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class StudyRecordService {
+    private static final Logger log = LoggerFactory.getLogger(StudyRecordService.class);
     private final StudyRecordRepository studyRecordRepository;
     private final UserRepository userRepository;
 
@@ -40,6 +43,8 @@ public class StudyRecordService {
     @Transactional
     public StudyRecordResponse createStudyRecord(StudyRecordRequest request) {
         try {
+            log.info("Creating study record with editorMode: {}", request.getEditorMode());
+            
             User user = userRepository.findById(1L)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -47,12 +52,17 @@ public class StudyRecordService {
             record.setUser(user);
             record.setTitle(request.getTitle());
             record.setContent(request.getContent());
+            record.setEditorMode(request.getEditorMode());
             record.setTags(request.getTags());
             record.setReferences(request.getReferences());
             record.setPublic(request.isPublic());
 
-            return StudyRecordResponse.from(studyRecordRepository.save(record));
+            StudyRecord savedRecord = studyRecordRepository.save(record);
+            log.info("Saved study record with editorMode: {}", savedRecord.getEditorMode());
+            
+            return StudyRecordResponse.from(savedRecord);
         } catch (Exception e) {
+            log.error("Error creating study record", e);
             throw new RuntimeException("Failed to create study record", e);
         }
     }
@@ -62,6 +72,7 @@ public class StudyRecordService {
         StudyRecord record = findStudyRecord(id);
         record.setTitle(request.getTitle());
         record.setContent(request.getContent());
+        record.setEditorMode(request.getEditorMode());
         record.setTags(request.getTags());
         record.setReferences(request.getReferences());
         record.setPublic(request.isPublic());

@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import HomePage from './app/page';
-import NewStudyRecordPage from './app/study/page';
-import StudyRecordDetailPage from './app/new/id/page';
+import NewStudyRecordPage from './app/study/new/newStudy';
+import StudyRecordDetailPage from './app/study/id/studyRecord';
 import RootLayout from './app/layout';
 
 export default function App() {

@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { StudyRecord, Todo } from '../types'
 import TodoList from '../components/TodoList'
-import { Card, CardContent, Typography, Button, Box } from '@mui/material'
+import { Card, CardContent, Typography, Button, Box, Chip } from '@mui/material'
 import { studyRecordApi, todoApi } from '../services/api'
 
 export default function HomePage() {
   const [studyRecords, setStudyRecords] = useState<StudyRecord[]>([])
   const [todos, setTodos] = useState<Todo[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedTag, setSelectedTag] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -29,6 +30,15 @@ export default function HomePage() {
     }
     fetchData()
   }, [])
+
+  // 선택된 태그에 따라 레코드 필터링
+  const filteredRecords = selectedTag
+    ? studyRecords.filter(record => record.tags.includes(selectedTag))
+    : studyRecords
+
+  const handleTagClick = (tag: string) => {
+    setSelectedTag(selectedTag === tag ? null : tag)
+  }
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>
@@ -55,7 +65,7 @@ export default function HomePage() {
           </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {studyRecords.map((record) => (
+          {filteredRecords.map((record) => (
             <Card 
               key={record.id} 
               className="card-hover"
@@ -75,9 +85,25 @@ export default function HomePage() {
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
                   {record.tags.map((tag) => (
-                    <span key={tag} className="tag">
-                      {tag}
-                    </span>
+                    <Chip
+                      key={tag}
+                      label={tag}
+                      onClick={() => handleTagClick(tag)}
+                      sx={{
+                        bgcolor: selectedTag === tag 
+                          ? 'hsl(var(--primary))' 
+                          : 'hsl(var(--primary) / 0.1)',
+                        color: selectedTag === tag 
+                          ? 'hsl(var(--primary-foreground))' 
+                          : 'hsl(var(--primary))',
+                        cursor: 'pointer',
+                        '&:hover': {
+                          bgcolor: selectedTag === tag 
+                            ? 'hsl(var(--primary) / 0.9)' 
+                            : 'hsl(var(--primary) / 0.2)'
+                        }
+                      }}
+                    />
                   ))}
                 </Box>
                 <Button
