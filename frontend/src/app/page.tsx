@@ -6,8 +6,10 @@ import { StudyRecord, Todo } from '../types'
 import TodoList from '../components/TodoList'
 import { Card, CardContent, Typography, Button, Box, Chip } from '@mui/material'
 import { studyRecordApi, todoApi } from '../services/api'
+import { useTheme } from '../hooks/useTheme'
 
 export default function HomePage() {
+  const { theme } = useTheme()
   const [studyRecords, setStudyRecords] = useState<StudyRecord[]>([])
   const [todos, setTodos] = useState<Todo[]>([])
   const [loading, setLoading] = useState(true)
@@ -67,7 +69,10 @@ export default function HomePage() {
     <div className="space-y-16">
       <section>
         <div className="flex justify-between items-center mb-6">
-          <Typography variant="h4" sx={{ fontWeight: 700, color: '#FFFFFF' }}>
+          <Typography variant="h4" sx={{ 
+            fontWeight: 700, 
+            color: theme === 'dark' ? '#FFFFFF' : '#000000' 
+          }}>
             Recent Study Records
           </Typography>
           <Button
@@ -91,7 +96,7 @@ export default function HomePage() {
               <Typography 
                 variant="h6" 
                 sx={{ 
-                  color: 'white',
+                  color: theme === 'dark' ? '#FFFFFF' : '#000000',
                   mb: 3,
                   pb: 1,
                   borderBottom: '1px solid hsl(var(--border))'
@@ -128,7 +133,7 @@ export default function HomePage() {
                                 onClick={() => handleTagClick(tag)}
                                 sx={{
                                   bgcolor: selectedTag === tag ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.1)',
-                                  color: selectedTag === tag ? '#000000' : 'hsl(var(--primary))',
+                                  color: selectedTag === tag ? '#ffffff' : 'hsl(var(--primary))',
                                   border: '1px solid hsl(var(--primary) / 0.2)',
                                   cursor: 'pointer',
                                   '&:hover': { transform: 'scale(1.05)' },

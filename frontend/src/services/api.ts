@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { StudyRecord, Todo } from '../types'
+import { StudyRecord, Todo, TodoRequest } from '../types'
 
 const API_URL = 'http://localhost:8057/api'
 
@@ -27,7 +27,7 @@ export const studyRecordApi = {
 
 export const todoApi = {
   getAll: () => api.get<Todo[]>('/todos'),
-  create: (todo: Omit<Todo, 'id'>) => api.post<Todo>('/todos', todo),
+  create: (todo: TodoRequest) => api.post<Todo>('/todos', todo),
   update: (id: number, todo: Partial<Todo>) => api.put<Todo>(`/todos/${id}`, todo),
   delete: (id: number) => api.delete(`/todos/${id}`),
 } 

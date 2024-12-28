@@ -3,12 +3,13 @@ import { Todo, TodoPeriod } from '../types'
 import { format } from 'date-fns'
 import { 
   Button, TextField, Checkbox, Box, Typography, Tabs, Tab, IconButton,
-  Dialog, DialogTitle, DialogContent, DialogActions, Collapse 
+  Dialog, DialogTitle, DialogContent, DialogActions, Collapse, Snackbar, Alert
 } from '@mui/material'
 import { todoApi } from '../services/api'
 import DeleteIcon from '@mui/icons-material/Delete'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
+import { useTheme } from '../hooks/useTheme'
 
 interface TodoListProps {
   todos: Todo[]
@@ -22,26 +23,50 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
   const [dateError, setDateError] = useState(false)
   const [todoToDelete, setTodoToDelete] = useState<number | null>(null)
   const [expandedDates, setExpandedDates] = useState<{ [key: string]: boolean }>({});
+  const { theme = 'light' } = useTheme() || {}
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
 
-  const addTodo = () => {
+  const addTodo = async () => {
     if (!dueDate) {
       setDateError(true)
       return
     }
     if (newTodo.trim() && dueDate) {
       setDateError(false)
-      const todo = {
-        id: Date.now(),
+      const todoRequest = {
         task: newTodo.trim(),
         dueDate: `${dueDate}T00:00:00`,
         completed: false,
-        period: 'DAILY' as TodoPeriod,
-        user: { id: 1, email: '', username: '' }
+        period: 'DAILY' as TodoPeriod
       }
-      setTodos([...todos, todo])
-      setNewTodo('')
-      setDueDate('')
-      setSelectedTab(0)
+      
+      try {
+        const response = await todoApi.create(todoRequest)
+        setTodos([...todos, response.data])
+        setNewTodo('')
+        setDueDate('')
+        setSelectedTab(0)
+        setSnackbar({
+          open: true,
+          message: '할 일이 추가되었습니다',
+          severity: 'success'
+        })
+      } catch (error) {
+        console.error('Failed to create todo:', error)
+        setSnackbar({
+          open: true,
+          message: '할 일 추가에 실패했습니다',
+          severity: 'error'
+        })
+      }
     }
   }
 
@@ -49,15 +74,18 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
     const todo = todos.find(t => t.id === id)
     if (todo) {
       const updatedTodo = {
-        ...todo,
         completed: !todo.completed,
-        dueDate: `${todo.dueDate.split('T')[0]}T00:00:00`
       }
       try {
         await todoApi.update(id, updatedTodo)
         setTodos(todos.map(t => t.id === id ? { ...t, completed: !t.completed } : t))
       } catch (error) {
         console.error('Failed to update todo:', error)
+        setSnackbar({
+          open: true,
+          message: '권한이 없거나 서버 오류가 발생했습니다',
+          severity: 'error'
+        })
       }
     }
   }
@@ -104,6 +132,10 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
     }));
   };
 
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   return (
     <div>
       <Box sx={{ mb: 3 }}>
@@ -139,8 +171,18 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
               '& .MuiOutlinedInput-root': {
                 backgroundColor: 'hsl(var(--background))',
                 borderRadius: '8px',
+                color: theme === 'dark' ? '#ffffff' : 'inherit',
+                '& .MuiInputAdornment-root .MuiSvgIcon-root': {
+                  color: theme === 'dark' ? '#ffffff' : 'inherit'
+                },
                 '& fieldset': {
                   borderColor: dateError ? 'error.main' : 'hsl(var(--border))'
+                },
+                '& input': {
+                  color: theme === 'dark' ? '#ffffff' : 'inherit',
+                  '&::-webkit-calendar-picker-indicator': {
+                    filter: theme === 'dark' ? 'invert(1)' : 'none'
+                  }
                 }
               }
             }}
@@ -165,35 +207,23 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
         </Button>
       </Box>
 
-      <Tabs 
-        value={selectedTab} 
-        onChange={(_, newValue) => setSelectedTab(newValue)}
-        sx={{ 
-          mb: 2,
-          '& .MuiTabs-indicator': {
-            backgroundColor: 'hsl(var(--primary))'
-          }
-        }}
-      >
-        <Tab 
-          label="진행중" 
-          sx={{ 
-            color: selectedTab === 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-            '&.Mui-selected': {
-              color: 'hsl(var(--primary))'
+      <Box sx={{ borderBottom: 1, borderColor: 'hsl(var(--border))', mb: 2 }}>
+        <Tabs 
+          value={selectedTab} 
+          onChange={(_, newValue) => setSelectedTab(newValue)}
+          sx={{
+            '& .MuiTab-root': {
+              color: 'hsl(var(--muted-foreground))',
+              '&.Mui-selected': {
+                color: 'hsl(var(--foreground))'
+              }
             }
           }}
-        />
-        <Tab 
-          label={`완료됨 (${completedCount})`}
-          sx={{ 
-            color: selectedTab === 1 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-            '&.Mui-selected': {
-              color: 'hsl(var(--primary))'
-            }
-          }}
-        />
-      </Tabs>
+        >
+          <Tab label={`진행중 (${todos.filter(todo => !todo.completed).length})`} />
+          <Tab label={`완료됨 (${completedCount})`} />
+        </Tabs>
+      </Box>
 
       <Box sx={{ mt: 1 }}>
         {Object.entries(groupedTodos)
@@ -337,6 +367,28 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{
+            width: '100%',
+            bgcolor: snackbar.severity === 'error' ? 'hsl(var(--destructive))' : 'hsl(var(--primary))',
+            color: snackbar.severity === 'error' ? 'white' : 'hsl(var(--primary-foreground))',
+            '& .MuiAlert-icon': {
+              color: 'inherit'
+            }
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   )
 }

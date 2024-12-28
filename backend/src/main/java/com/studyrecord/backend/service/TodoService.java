@@ -70,4 +70,19 @@ public class TodoService {
         return todoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Todo not found"));
     }
+
+    @Transactional
+    public TodoResponse updateTodoStatus(Long id, Boolean completed) {
+        try {
+            Todo todo = todoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Todo not found with id: " + id));
+            
+            todo.setCompleted(completed);
+            Todo savedTodo = todoRepository.save(todo);
+            
+            return TodoResponse.from(savedTodo);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update todo status", e);
+        }
+    }
 } 

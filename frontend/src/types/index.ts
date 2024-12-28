@@ -21,9 +21,10 @@ export interface Todo {
   id: number;
   task: string;
   dueDate: string;
-  period: 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  period: TodoPeriod;
   completed: boolean;
-  user: User;
 }
+
+export type TodoRequest = Omit<Todo, 'id' | 'user'>;
 
 export type TodoPeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY'; 

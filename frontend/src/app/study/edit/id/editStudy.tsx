@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { 
   TextField, Button, Card, CardContent, CardHeader, 
   Typography, Box, ToggleButtonGroup, ToggleButton,
@@ -9,21 +9,41 @@ import {
 } from '@mui/material'
 import MDEditor from '@uiw/react-md-editor'
 import { Eye, EyeOff } from 'lucide-react'
-import { studyRecordApi } from '../../../services/api'
-import { useTheme } from '../../../hooks/useTheme'
-import { MarkdownRenderer } from '../../../components/markdown/MarkdownRenderer'
+import { studyRecordApi } from '../../../../services/api'
+import { useTheme } from '../../../../hooks/useTheme'
+import { MarkdownRenderer } from '../../../../components/markdown/MarkdownRenderer'
 
 type EditorMode = 'basic' | 'markdown'
 
-export default function NewStudyRecord() {
+export default function EditStudyRecord() {
+  const { id } = useParams()
+  const navigate = useNavigate()
   const { theme = 'light' } = useTheme() || {}
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [tags, setTags] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [editorMode, setEditorMode] = useState<EditorMode>('basic')
   const [showPreview, setShowPreview] = useState(true)
-  const navigate = useNavigate()
+
+  useEffect(() => {
+    const fetchStudyRecord = async () => {
+      try {
+        if (!id) return
+        const response = await studyRecordApi.getById(Number(id))
+        const record = response.data
+        setTitle(record.title)
+        setContent(record.content)
+        setTags(record.tags.join(', '))
+        setEditorMode(record.editorMode)
+        setLoading(false)
+      } catch (error) {
+        console.error('학습 기록 로딩 실패:', error)
+        navigate('/')
+      }
+    }
+    fetchStudyRecord()
+  }, [id, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,22 +54,20 @@ export default function NewStudyRecord() {
 
     setLoading(true)
     try {
-      const newRecord = {
+      const updatedRecord = {
         title: title.trim(),
         content: content.trim(),
         editorMode,
         tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
         references: [],
-        isPublic: true,
-        user: { id: 1, email: '', username: '' }
+        isPublic: true
       }
       
-      await studyRecordApi.create(newRecord)
-      
-      navigate('/')
+      await studyRecordApi.update(Number(id), updatedRecord)
+      navigate(`/study/${id}`)
     } catch (error) {
-      console.error('학습 기록 생성 실패:', error)
-      alert('학습 기록 생성에 실패했습니다.')
+      console.error('학습 기록 수정 실패:', error)
+      alert('학습 기록 수정에 실패했습니다.')
     } finally {
       setLoading(false)
     }
@@ -59,30 +77,48 @@ export default function NewStudyRecord() {
     switch (editorMode) {
       case 'basic':
         return (
-          <Box sx={{ flex: '0 0 50%' }}>
-            <TextField
-              multiline
-              rows={17}
-              fullWidth
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="내용을 입력하세요..."
-              sx={{
-                height: '400px',
-                '& .MuiOutlinedInput-root': {
-                  height: '100%',
-                  bgcolor: 'hsl(var(--background))',
-                  '& fieldset': {
-                    borderColor: 'transparent',
-                    borderRadius: 0
-                  },
-                  '& textarea': {
-                    height: '100% !important',
-                    color: 'hsl(var(--foreground))'
+          <Box sx={{ display: 'flex', width: '100%' }}>
+            <Box sx={{ flex: '0 0 50%' }}>
+              <TextField
+                multiline
+                rows={17}
+                fullWidth
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="내용을 입력하세요..."
+                sx={{
+                  height: '400px',
+                  '& .MuiOutlinedInput-root': {
+                    height: '100%',
+                    bgcolor: theme === 'dark' ? '#000000' : '#ffffff',
+                    '& fieldset': {
+                      borderColor: 'transparent',
+                      borderRadius: 0
+                    },
+                    '& textarea': {
+                      height: '100% !important',
+                      color: 'hsl(var(--foreground))'
+                    }
                   }
-                }
-              }}
-            />
+                }}
+              />
+            </Box>
+            {showPreview && (
+              <Box sx={{ 
+                flex: '0 0 50%',
+                height: '400px',
+                overflow: 'auto',
+                borderLeft: '1px solid hsl(var(--border))',
+                bgcolor: theme === 'dark' ? '#000000' : '#ffffff'
+              }}>
+                <div style={{ 
+                  padding: '1rem',
+                  color: theme === 'dark' ? 'hsl(var(--foreground))' : '#000000'
+                }}>
+                  <div style={{ whiteSpace: 'pre-wrap' }}>{content}</div>
+                </div>
+              </Box>
+            )}
           </Box>
         )
       case 'markdown':
@@ -91,7 +127,8 @@ export default function NewStudyRecord() {
             <div 
               data-color-mode={theme === 'dark' ? 'dark' : 'light'} 
               style={{ 
-                display: 'flex'
+                display: 'flex',
+                height: '400px'
               }}
             >
               <MDEditor
@@ -117,9 +154,13 @@ export default function NewStudyRecord() {
               {showPreview && (
                 <Box sx={{ 
                   width: '50%',
-                  border: '1px solid hsl(var(--border))',
+                  borderLeft: '1px solid hsl(var(--border))',
                   height: '400px',
-                  overflow: 'auto'
+                  overflow: 'auto',
+                  minHeight: '400px',
+                  '& .markdown-body': {
+                    minHeight: '400px'
+                  }
                 }}>
                   <div data-color-mode={theme === 'dark' ? 'dark' : 'light'}>
                     <MarkdownRenderer content={content} />
@@ -132,22 +173,11 @@ export default function NewStudyRecord() {
     }
   }
 
-  const renderPreview = () => {
-    if (!showPreview || editorMode === 'markdown') return null;
-    
+  if (loading) {
     return (
-      <Box sx={{ flex: '0 0 50%' }}>
-        <div 
-          className="prose dark:prose-invert h-[400px] overflow-y-auto"
-          style={{
-            backgroundColor: 'hsl(var(--background))',
-            borderLeft: '1px solid hsl(var(--border))',
-            padding: '16px'
-          }}
-        >
-          <div style={{ whiteSpace: 'pre-wrap' }}>{content}</div>
-        </div>
-      </Box>
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+      </div>
     )
   }
 
@@ -161,7 +191,7 @@ export default function NewStudyRecord() {
         <CardHeader 
           title={
             <Typography variant="h4" sx={{ color: 'hsl(var(--foreground))' }}>
-              새 학습 기록 작성
+              학습 기록 수정
             </Typography>
           } 
         />
@@ -231,7 +261,6 @@ export default function NewStudyRecord() {
                 borderRadius: '4px'
               }}>
                 {renderEditor()}
-                {editorMode === 'basic' && renderPreview()}
               </Box>
             </Box>
             <TextField
@@ -270,5 +299,4 @@ export default function NewStudyRecord() {
       </Card>
     </div>
   )
-}
-
+} 

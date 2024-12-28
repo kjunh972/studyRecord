@@ -12,6 +12,7 @@ import com.studyrecord.backend.dto.TodoResponse;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/todos")
@@ -34,8 +35,18 @@ public class TodoController {
     @PutMapping("/{id}")
     public ResponseEntity<TodoResponse> updateTodo(
             @PathVariable Long id, 
-            @RequestBody TodoRequest request) {
-        return ResponseEntity.ok(todoService.updateTodo(id, request));
+            @RequestBody Map<String, Boolean> updates) {
+        try {
+            Boolean completed = updates.get("completed");
+            if (completed == null) {
+                return ResponseEntity.badRequest().build();
+            }
+            TodoResponse updatedTodo = todoService.updateTodoStatus(id, completed);
+            return ResponseEntity.ok(updatedTodo);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .build();
+        }
     }
 
     @DeleteMapping("/{id}")
