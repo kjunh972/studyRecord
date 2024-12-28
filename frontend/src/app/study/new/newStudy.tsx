@@ -12,6 +12,8 @@ import { Eye, EyeOff } from 'lucide-react'
 import { studyRecordApi } from '../../../services/api'
 import { useTheme } from '../../../hooks/useTheme'
 import { MarkdownRenderer } from '../../../components/markdown/MarkdownRenderer'
+import { usePrompt } from '../../../hooks/usePrompt'
+import { NavigationPrompt } from '../../../components/NavigationPrompt'
 
 type EditorMode = 'basic' | 'markdown'
 
@@ -20,10 +22,31 @@ export default function NewStudyRecord() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [tags, setTags] = useState('')
+  const [isModified, setIsModified] = useState(false)
   const [loading, setLoading] = useState(false)
   const [editorMode, setEditorMode] = useState<EditorMode>('basic')
   const [showPreview, setShowPreview] = useState(true)
   const navigate = useNavigate()
+
+  const { showDialog, handleCancel, handleConfirm, message } = usePrompt(
+    '작성중인 내용이 있습니다. 저장하지 않고 나가시겠습니까?',
+    isModified
+  )
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value)
+    setIsModified(true)
+  }
+
+  const handleContentChange = (value: string) => {
+    setContent(value)
+    setIsModified(true)
+  }
+
+  const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTags(e.target.value)
+    setIsModified(true)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,12 +67,13 @@ export default function NewStudyRecord() {
         user: { id: 1, email: '', username: '' }
       }
       
+      setIsModified(false)
       await studyRecordApi.create(newRecord)
-      
       navigate('/')
     } catch (error) {
       console.error('학습 기록 생성 실패:', error)
       alert('학습 기록 생성에 실패했습니다.')
+      setIsModified(true)
     } finally {
       setLoading(false)
     }
@@ -59,15 +83,16 @@ export default function NewStudyRecord() {
     switch (editorMode) {
       case 'basic':
         return (
-          <Box sx={{ flex: '0 0 50%' }}>
+          <Box sx={{ display: 'flex', width: '100%' }}>
             <TextField
               multiline
               rows={17}
               fullWidth
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => handleContentChange(e.target.value)}
               placeholder="내용을 입력하세요..."
               sx={{
+                flex: showPreview ? '1 1 50%' : '1 1 100%',
                 height: '400px',
                 '& .MuiOutlinedInput-root': {
                   height: '100%',
@@ -82,6 +107,7 @@ export default function NewStudyRecord() {
                   }
                 }
               }}
+              aria-label="내용 입력"
             />
           </Box>
         )
@@ -91,12 +117,13 @@ export default function NewStudyRecord() {
             <div 
               data-color-mode={theme === 'dark' ? 'dark' : 'light'} 
               style={{ 
-                display: 'flex'
+                display: 'flex',
+                height: '400px'
               }}
             >
               <MDEditor
                 value={content}
-                onChange={(value) => setContent(value || '')}
+                onChange={(value) => value !== undefined && handleContentChange(value)}
                 height={400}
                 visibleDragbar={false}
                 preview="edit"
@@ -119,10 +146,14 @@ export default function NewStudyRecord() {
                   width: '50%',
                   border: '1px solid hsl(var(--border))',
                   height: '400px',
-                  overflow: 'auto'
+                  overflow: 'auto',
+                  '& .markdown-body': {
+                    minHeight: '400px',
+                    padding: '1rem'
+                  }
                 }}>
                   <div data-color-mode={theme === 'dark' ? 'dark' : 'light'}>
-                    <MarkdownRenderer content={content} />
+                    <MarkdownRenderer content={content || ''} />
                   </div>
                 </Box>
               )}
@@ -152,7 +183,7 @@ export default function NewStudyRecord() {
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4" role="main">
       <Card sx={{ 
         bgcolor: 'hsl(var(--card))',
         color: 'hsl(var(--card-foreground))',
@@ -171,8 +202,9 @@ export default function NewStudyRecord() {
               fullWidth
               label="제목"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={handleTitleChange}
               required
+              aria-label="제목 입력"
               sx={{
                 '& .MuiOutlinedInput-root': {
                   bgcolor: 'hsl(var(--background))',
@@ -238,8 +270,9 @@ export default function NewStudyRecord() {
               fullWidth
               label="태그 (쉼표로 구분)"
               value={tags}
-              onChange={(e) => setTags(e.target.value)}
+              onChange={handleTagsChange}
               placeholder="예: Spring Boot, java, React, Typescript, web"
+              aria-label="태그 입력"
               sx={{
                 '& .MuiOutlinedInput-root': {
                   bgcolor: 'hsl(var(--background))',
@@ -268,7 +301,13 @@ export default function NewStudyRecord() {
           </form>
         </CardContent>
       </Card>
+      <NavigationPrompt
+        open={showDialog}
+        message={message}
+        onCancel={handleCancel}
+        onConfirm={handleConfirm}
+        aria-modal="true"
+      />
     </div>
   )
 }
-

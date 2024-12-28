@@ -11,13 +11,11 @@ import {
 import { Edit as EditIcon } from '@mui/icons-material'
 import { Trash2 } from 'lucide-react'
 import { studyRecordApi } from '../../../services/api'
-import { useTheme } from '../../../hooks/useTheme'
 import { MarkdownRenderer } from '../../../components/markdown/MarkdownRenderer'
 
 export default function StudyRecordPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { theme } = useTheme()
   const [record, setRecord] = useState<StudyRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [openDialog, setOpenDialog] = useState(false)
@@ -112,9 +110,9 @@ export default function StudyRecordPage() {
               </Tooltip>
               <Tooltip title="삭제">
                 <IconButton onClick={() => setOpenDialog(true)} sx={{ 
-                  color: theme === 'dark' ? '#ff6b6b' : '#ff8787',
+                  color: '#ff6b6b',
                   '&:hover': {
-                    bgcolor: theme === 'dark' ? 'rgba(255, 107, 107, 0.1)' : 'rgba(255, 135, 135, 0.1)'
+                    bgcolor: 'rgba(255, 107, 107, 0.1)'
                   }
                 }}>
                   <Trash2 />
@@ -206,10 +204,10 @@ export default function StudyRecordPage() {
             onClick={handleDelete}
             variant="contained"
             sx={{ 
-              bgcolor: theme === 'dark' ? '#ff6b6b' : '#ff8787',
-              color: 'white',
+              bgcolor: '#fa5252',
+              color: 'hsl(var(--destructive-foreground))',
               '&:hover': { 
-                bgcolor: theme === 'dark' ? '#fa5252' : '#ff6b6b'
+                bgcolor: '#ff6b6b'
               }
             }}
           >
