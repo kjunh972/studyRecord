@@ -4,6 +4,10 @@ import NewStudyRecordPage from './app/study/new/newStudy';
 import StudyRecordDetailPage from './app/study/id/studyRecord';
 import EditStudyRecord from './app/study/edit/id/editStudy';
 import RootLayout from './app/layout';
+import LoginPage from './app/user/login';
+import SignUpPage from './app/user/signup';
+import TermsOfServicePage from './app/user/terms';
+import PrivacyPolicyPage from './app/user/privacy';
 
 // 라우터 설정
 const router = createBrowserRouter([
@@ -16,6 +20,14 @@ const router = createBrowserRouter([
         element: <HomePage />
       },
       {
+        path: "/login",        // 로그인 페이지 추가
+        element: <LoginPage />
+      },
+      {
+        path: "/signup",       // 회원가입 페이지 추가
+        element: <SignUpPage />
+      },
+      {
         path: "/study/new",       // 새 학습 기록 작성 페이지
         element: <NewStudyRecordPage />
       },
@@ -26,6 +38,14 @@ const router = createBrowserRouter([
       {
         path: "/study/edit/:id",  // 학습 기록 수정 페이지
         element: <EditStudyRecord />
+      },
+      {
+        path: "/terms",
+        element: <TermsOfServicePage />
+      },
+      {
+        path: "/privacy",
+        element: <PrivacyPolicyPage />
       }
     ]
   }

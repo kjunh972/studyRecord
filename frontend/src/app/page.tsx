@@ -33,7 +33,7 @@ export default function HomePage() {
     fetchData()
   }, [])
 
-  // 날짜별로 레코드 그룹화하는 함수
+  // 날짜별로 레���드 그룹화하는 함수
   const groupRecordsByDate = (records: StudyRecord[]) => {
     const groups = records.reduce((acc, record) => {
       const date = new Date(record.createdAt).toLocaleDateString();
@@ -79,11 +79,11 @@ export default function HomePage() {
             component={Link}
             to="/study/new"
             variant="contained"
-            sx={{
-              bgcolor: 'white',
-              color: '#000000',
+            sx={{ 
+              bgcolor: 'hsl(var(--foreground))',
+              color: 'hsl(var(--background))',
               '&:hover': {
-                bgcolor: 'rgba(255, 255, 255, 0.9)'
+                bgcolor: 'hsl(var(--foreground) / 0.9)'
               }
             }}
           >
