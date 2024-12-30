@@ -2,10 +2,12 @@ package com.studyrecord.backend.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 
 import com.studyrecord.backend.service.TodoService;
-import com.studyrecord.backend.domain.TodoPeriod;
 import com.studyrecord.backend.dto.TodoRequest;
 import com.studyrecord.backend.dto.TodoResponse;
 
@@ -21,9 +23,11 @@ public class TodoController {
     private final TodoService todoService;
 
     @GetMapping
-    public ResponseEntity<List<TodoResponse>> getAllTodos(
-            @RequestParam(name = "period", required = false) TodoPeriod period) {
-        return ResponseEntity.ok(todoService.getAllTodos(period));
+    public ResponseEntity<List<TodoResponse>> getAllTodos(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            throw new AccessDeniedException("로그인이 필요한 서비스입니다.");
+        }
+        return ResponseEntity.ok(todoService.getAllTodosByUsername(userDetails.getUsername()));
     }
 
     @PostMapping

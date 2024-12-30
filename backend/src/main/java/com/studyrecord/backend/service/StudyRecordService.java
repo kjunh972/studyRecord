@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.studyrecord.backend.exception.ResourceNotFoundException;
 
 @Service
 @RequiredArgsConstructor
@@ -22,13 +23,8 @@ public class StudyRecordService {
     private final StudyRecordRepository studyRecordRepository;
     private final UserRepository userRepository;
 
-    public List<StudyRecordResponse> getAllStudyRecords() {
-        List<StudyRecord> records = studyRecordRepository.findAllByOrderByCreatedAtDesc();
-        records.forEach(record -> {
-            record.getTags().size();
-            record.getReferences().size();
-        });
-        return records.stream()
+    public List<StudyRecordResponse> getAllStudyRecordsByUsername(String username) {
+        return studyRecordRepository.findAllByUserUsername(username).stream()
                 .map(StudyRecordResponse::from)
                 .collect(Collectors.toList());
     }
@@ -41,13 +37,13 @@ public class StudyRecordService {
     }
 
     @Transactional
-    public StudyRecordResponse createStudyRecord(StudyRecordRequest request) {
+    public StudyRecordResponse createStudyRecord(StudyRecordRequest request, String username) {
         try {
-            log.info("Creating study record with editorMode: {}", request.getEditorMode());
-            
-            User user = userRepository.findById(1L)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+            log.info("Creating study record for user: {}", username);
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found: " + username));
 
+            log.info("Found user: {}", user.getUsername());
             StudyRecord record = new StudyRecord();
             record.setUser(user);
             record.setTitle(request.getTitle());
@@ -58,8 +54,7 @@ public class StudyRecordService {
             record.setPublic(request.isPublic());
 
             StudyRecord savedRecord = studyRecordRepository.save(record);
-            log.info("Saved study record with editorMode: {}", savedRecord.getEditorMode());
-            
+            log.info("Saved study record with ID: {}", savedRecord.getId());
             return StudyRecordResponse.from(savedRecord);
         } catch (Exception e) {
             log.error("Error creating study record", e);
@@ -88,5 +83,10 @@ public class StudyRecordService {
     private StudyRecord findStudyRecord(Long id) {
         return studyRecordRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Study record not found"));
+    }
+
+    public StudyRecord getById(Long id) {
+        return studyRecordRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("학습 기록을 찾을 수 없습니다."));
     }
 } 

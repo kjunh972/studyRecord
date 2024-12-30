@@ -14,9 +14,11 @@ public class DataInitializer {
         return args -> {
             if (userRepository.count() == 0) {
                 User user = new User();
-                user.setEmail("test@example.com");
+                user.setUsername("testuser");
+                user.setName("Test User");
                 user.setPassword("password");
-                user.setUsername("Test User");
+                user.setPhone("010-1234-5678");
+                user.setBirthdate("2000-01-01");
                 userRepository.save(user);
             }
         };

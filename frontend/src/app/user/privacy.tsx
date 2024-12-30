@@ -83,10 +83,7 @@ export default function PrivacyPolicyPage() {
               </Typography>
               <List sx={{ pl: 4, mb: 2 }}>
                 <ListItem sx={{ display: 'list-item', listStyleType: 'disc' }}>
-                  필수항목: 이메일, 비밀번호, 이름
-                </ListItem>
-                <ListItem sx={{ display: 'list-item', listStyleType: 'disc' }}>
-                  선택항목: 연락처, 주소
+                  아이디, 비밀번호, 이름, 전화번호, 생년월일
                 </ListItem>
               </List>
 

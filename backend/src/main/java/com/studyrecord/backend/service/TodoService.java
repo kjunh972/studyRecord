@@ -20,14 +20,8 @@ public class TodoService {
     private final TodoRepository todoRepository;
     private final UserRepository userRepository;
 
-    public List<TodoResponse> getAllTodos(TodoPeriod period) {
-        List<Todo> todos;
-        if (period != null) {
-            todos = todoRepository.findAllByPeriodOrderByDueDateAsc(period);
-        } else {
-            todos = todoRepository.findAllByOrderByDueDateAsc();
-        }
-        return todos.stream()
+    public List<TodoResponse> getAllTodosByUsername(String username) {
+        return todoRepository.findAllByUserUsername(username).stream()
                 .map(TodoResponse::from)
                 .collect(Collectors.toList());
     }

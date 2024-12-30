@@ -5,31 +5,88 @@ import {
   CircularProgress
 } from '@mui/material'
 import { motion } from "framer-motion"
+import { useTheme } from '../../hooks/useTheme'
+import { authService } from '../../services/auth'
 
 export default function SignUpPage() {
+  const { theme } = useTheme()
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+    passwordConfirm: '',
+    name: '',
+    phone: '',
+    birthdate: '',
+  })
+  const [errors, setErrors] = useState({
+    username: '',
+    password: '',
+    passwordConfirm: '',
+    phone: ''
+  })
   const navigate = useNavigate()
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const validateForm = () => {
+    const newErrors = {
+      username: '',
+      password: '',
+      passwordConfirm: '',
+      phone: ''
+    }
+
+    if (formData.username.length < 4) {
+      newErrors.username = '아이디는 4자 이상이어야 합니다'
+    }
+
+    if (formData.password.length < 8) {
+      newErrors.password = '비밀번호는 8자 이상이어야 합니다'
+    }
+
+    if (formData.password !== formData.passwordConfirm) {
+      newErrors.passwordConfirm = '비밀번호가 일치하지 않습니다'
+    }
+
+    if (!/^\d{3}-\d{4}-\d{4}$/.test(formData.phone)) {
+      newErrors.phone = '올바른 전화번호 형식을 입력해주세요 (예: 010-1234-5678)'
+    }
+
+    setErrors(newErrors)
+    return !Object.values(newErrors).some(error => error !== '')
+  }
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (!validateForm()) return
+
     setIsLoading(true)
-
-    const form = event.currentTarget
-    const formData = new FormData(form)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const email = formData.get('email') as string
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const password = formData.get('password') as string
-
-    // API 호출 시뮬레이션
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      await authService.signup({
+        username: formData.username,
+        password: formData.password,
+        name: formData.name,
+        phone: formData.phone,
+        birthdate: formData.birthdate
+      })
       navigate('/login')
-    }, 1000)
+    } catch (error) {
+      console.error('회원가입 실패:', error)
+      // TODO: 에러 처리
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name as string]: value
+    }))
   }
 
   return (
-    <div className="flex justify-center items-center min-h-[calc(100vh-180px)] bg-background">
+    <div className="flex justify-center items-center min-h-[calc(100vh-120px)] bg-background">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -48,21 +105,25 @@ export default function SignUpPage() {
               color: 'hsl(var(--foreground))',
               fontWeight: 600
             }}>
-              계정 만들기
+              회원가입
             </Typography>
             <Typography sx={{ 
               mb: 4,
               color: 'hsl(var(--muted-foreground))'
             }}>
-              아래에 이메일을 입력하여 계정을 만드세요
+              아래 정보를 입력하여 계정을 만드세요
             </Typography>
 
-            <form onSubmit={onSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <TextField
                 fullWidth
-                label="이메일"
-                type="email"
-                name="email"
+                label="아이디"
+                name="username"
+                type="text"
+                value={formData.username}
+                onChange={handleInputChange}
+                error={!!errors.username}
+                helperText={errors.username}
                 required
                 sx={{
                   '& .MuiOutlinedInput-root': {
@@ -70,30 +131,93 @@ export default function SignUpPage() {
                     '& fieldset': {
                       borderColor: 'hsl(var(--input))'
                     }
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: 'hsl(var(--muted-foreground))'
                   }
                 }}
               />
               <TextField
                 fullWidth
                 label="비밀번호"
-                type="password"
                 name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                error={!!errors.password}
+                helperText={errors.password}
                 required
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    bgcolor: 'hsl(var(--background))',
-                    '& fieldset': {
-                      borderColor: 'hsl(var(--input))'
-                    }
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: 'hsl(var(--muted-foreground))'
+                    bgcolor: 'hsl(var(--background))'
                   }
                 }}
               />
+              <TextField
+                fullWidth
+                label="비밀번호 확인"
+                name="passwordConfirm"
+                type="password"
+                value={formData.passwordConfirm}
+                onChange={handleInputChange}
+                error={!!errors.passwordConfirm}
+                helperText={errors.passwordConfirm}
+                required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: 'hsl(var(--background))'
+                  }
+                }}
+              />
+              <TextField
+                fullWidth
+                label="이름"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: 'hsl(var(--background))'
+                  }
+                }}
+              />
+              <TextField
+                fullWidth
+                label="전화번호"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                error={!!errors.phone}
+                helperText={errors.phone}
+                placeholder="010-1234-5678"
+                required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: 'hsl(var(--background))'
+                  }
+                }}
+              />
+              <TextField
+                fullWidth
+                label="생년월일"
+                name="birthdate"
+                type="date"
+                value={formData.birthdate}
+                onChange={handleInputChange}
+                required
+                InputLabelProps={{ shrink: true }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: 'hsl(var(--background))',
+                    '& input': {
+                      color: 'hsl(var(--foreground))',
+                      '&::-webkit-calendar-picker-indicator': {
+                        filter: theme === 'dark' ? 'invert(100%)' : 'none',
+                        cursor: 'pointer'
+                      }
+                    },
+                  }
+                }}
+              />
+
               <Button
                 fullWidth
                 type="submit"
@@ -132,6 +256,21 @@ export default function SignUpPage() {
                 개인정보 처리방침
               </Link>
               에 동의하게 됩니다.
+            </Typography>
+
+            <Typography sx={{ 
+              mt: 3,
+              textAlign: 'center',
+              fontSize: '0.875rem',
+              color: 'hsl(var(--muted-foreground))'
+            }}>
+              이미 계정이 있으신가요?{' '}
+              <Link
+                to="/login"
+                className="text-primary hover:underline"
+              >
+                로그인
+              </Link>
             </Typography>
           </CardContent>
         </Card>

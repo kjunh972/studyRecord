@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom'
 import { ModeToggle } from './mode-toggle'
 import { AppBar, Toolbar, Box, Typography, Button } from '@mui/material'
-import { BookOpen, LogIn, UserPlus } from 'lucide-react'
+import { BookOpen, LogIn, UserPlus, User, LogOut } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function Navbar() {
+  const { isAuthenticated, logout } = useAuth()
+
   return (
     <AppBar 
       position="static" 
@@ -32,35 +35,69 @@ export default function Navbar() {
           alignItems: 'center', 
           gap: 2 
         }}>
-          <Button
-            component={Link}
-            to="/login"
-            startIcon={<LogIn size={18} />}
-            sx={{
-              color: 'hsl(var(--foreground))',
-              '&:hover': {
-                color: 'hsl(var(--primary))',
-                bgcolor: 'hsl(var(--accent))'
-              }
-            }}
-          >
-            로그인
-          </Button>
-          <Button
-            component={Link}
-            to="/signup"
-            startIcon={<UserPlus size={18} />}
-            variant="contained"
-            sx={{
-              bgcolor: 'hsl(var(--primary))',
-              color: 'hsl(var(--primary-foreground))',
-              '&:hover': {
-                bgcolor: 'hsl(var(--primary) / 0.9)'
-              }
-            }}
-          >
-            회원가입
-          </Button>
+          {!isAuthenticated ? (
+            <>
+              <Button
+                component={Link}
+                to="/login"
+                startIcon={<LogIn size={18} />}
+                sx={{
+                  color: 'hsl(var(--foreground))',
+                  '&:hover': {
+                    color: 'hsl(var(--primary))',
+                    bgcolor: 'hsl(var(--accent))'
+                  }
+                }}
+              >
+                로그인
+              </Button>
+              <Button
+                component={Link}
+                to="/signup"
+                startIcon={<UserPlus size={18} />}
+                variant="contained"
+                sx={{
+                  bgcolor: 'hsl(var(--primary))',
+                  color: 'hsl(var(--primary-foreground))',
+                  '&:hover': {
+                    bgcolor: 'hsl(var(--primary) / 0.9)'
+                  }
+                }}
+              >
+                회원가입
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                component={Link}
+                to="/mypage"
+                startIcon={<User size={18} />}
+                sx={{
+                  color: 'hsl(var(--foreground))',
+                  '&:hover': {
+                    color: 'hsl(var(--primary))',
+                    bgcolor: 'hsl(var(--accent))'
+                  }
+                }}
+              >
+                마이페이지
+              </Button>
+              <Button
+                onClick={logout}
+                startIcon={<LogOut size={18} />}
+                sx={{
+                  color: 'hsl(var(--foreground))',
+                  '&:hover': {
+                    color: 'hsl(var(--destructive))',
+                    bgcolor: 'hsl(var(--destructive) / 0.1)'
+                  }
+                }}
+              >
+                로그아웃
+              </Button>
+            </>
+          )}
           <ModeToggle />
         </Box>
       </Toolbar>

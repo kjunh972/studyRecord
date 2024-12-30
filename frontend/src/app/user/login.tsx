@@ -6,27 +6,35 @@ import {
 } from '@mui/material'
 import { GitHub } from '@mui/icons-material'
 import { motion } from "framer-motion"
+import { useAuth } from '../../contexts/AuthContext'
+import { authService } from '../../services/auth'
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [error, setError] = useState('')
   const navigate = useNavigate()
+  const { login } = useAuth()
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setIsLoading(true)
+    setError('')
 
     const form = event.currentTarget
     const formData = new FormData(form)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const email = formData.get('email') as string
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const username = formData.get('username') as string
     const password = formData.get('password') as string
 
-    // API 호출 시뮬레이션
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      const response = await authService.login({ username, password })
+      login(response)
       navigate('/')
-    }, 1000)
+    } catch (error) {
+      console.error('로그인 실패:', error)
+      setError('아이디 또는 비밀번호가 올바르지 않습니다')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -55,15 +63,15 @@ export default function LoginPage() {
               mb: 4,
               color: 'hsl(var(--muted-foreground))'
             }}>
-              이메일과 비밀번호를 입력하여 로그인하세요
+              아이디와 비밀번호를 입력하여 로그인하세요
             </Typography>
 
             <form onSubmit={onSubmit} className="space-y-4">
               <TextField
                 fullWidth
-                label="이메일"
-                type="email"
-                name="email"
+                label="아이디"
+                type="text"
+                name="username"
                 required
                 sx={{
                   '& .MuiOutlinedInput-root': {
@@ -154,6 +162,12 @@ export default function LoginPage() {
                 회원가입
               </Link>
             </Typography>
+
+            {error && (
+              <Typography color="error" sx={{ mt: 2, textAlign: 'center' }}>
+                {error}
+              </Typography>
+            )}
           </CardContent>
         </Card>
       </motion.div>

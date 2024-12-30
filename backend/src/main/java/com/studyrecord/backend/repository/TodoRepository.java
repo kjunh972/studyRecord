@@ -9,4 +9,5 @@ import java.util.List;
 public interface TodoRepository extends JpaRepository<Todo, Long> {
     List<Todo> findAllByPeriodOrderByDueDateAsc(TodoPeriod period);
     List<Todo> findAllByOrderByDueDateAsc();
+    List<Todo> findAllByUserUsername(String username);
 } 

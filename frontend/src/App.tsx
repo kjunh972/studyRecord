@@ -1,59 +1,51 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import HomePage from './app/page';
-import NewStudyRecordPage from './app/study/new/newStudy';
-import StudyRecordDetailPage from './app/study/id/studyRecord';
-import EditStudyRecord from './app/study/edit/id/editStudy';
+import { 
+  createBrowserRouter, 
+  RouterProvider
+} from 'react-router-dom';
 import RootLayout from './app/layout';
+import { AuthProvider } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import StudyRoutes from './app/study/StudyRoutes';
+import HomePage from './app/page';
 import LoginPage from './app/user/login';
 import SignUpPage from './app/user/signup';
 import TermsOfServicePage from './app/user/terms';
 import PrivacyPolicyPage from './app/user/privacy';
-
-// 라우터 설정
-const router = createBrowserRouter([
-  {
-    path: "/",                    // 루트 경로
-    element: <RootLayout />,      // 모든 페이지의 공통 레이아웃
-    children: [                   // 중첩 라우트 설정
-      {
-        path: "/",                // 홈페이지
-        element: <HomePage />
-      },
-      {
-        path: "/login",        // 로그인 페이지 추가
-        element: <LoginPage />
-      },
-      {
-        path: "/signup",       // 회원가입 페이지 추가
-        element: <SignUpPage />
-      },
-      {
-        path: "/study/new",       // 새 학습 기록 작성 페이지
-        element: <NewStudyRecordPage />
-      },
-      {
-        path: "/study/:id",       // 학습 기록 상세 페이지 (:id는 동적 파라미터)
-        element: <StudyRecordDetailPage />
-      },
-      {
-        path: "/study/edit/:id",  // 학습 기록 수정 페이지
-        element: <EditStudyRecord />
-      },
-      {
-        path: "/terms",
-        element: <TermsOfServicePage />
-      },
-      {
-        path: "/privacy",
-        element: <PrivacyPolicyPage />
-      }
-    ]
-  }
-])
+import MyPage from './app/user/myPage';
 
 // 앱의 메인 컴포넌트
 export default function App() {
   return (
-    <RouterProvider router={router} />  // 라우터 적용
+    <AuthProvider>
+      <RouterProvider router={createBrowserRouter([
+        {
+          path: "/",
+          element: <RootLayout />,
+          children: [
+            { index: true, element: <HomePage /> },
+            { path: "login", element: <LoginPage /> },
+            { path: "signup", element: <SignUpPage /> },
+            { path: "terms", element: <TermsOfServicePage /> },
+            { path: "privacy", element: <PrivacyPolicyPage /> },
+            { 
+              path: "mypage", 
+              element: (
+                <ProtectedRoute>
+                  <MyPage />
+                </ProtectedRoute>
+              )
+            },
+            {
+              path: "study/*",
+              element: (
+                <ProtectedRoute>
+                  <StudyRoutes />
+                </ProtectedRoute>
+              )
+            }
+          ]
+        }
+      ])} />
+    </AuthProvider>
   );
 } 

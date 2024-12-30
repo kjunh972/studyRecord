@@ -40,7 +40,7 @@ export default function TermsOfServicePage() {
                 2. 서비스 이용
               </Typography>
               <Typography variant="body1" sx={{ mb: 2 }}>
-                회원은 회사가 정한 가입 양식에 따라 회원정보를 기입한 후 이 약관에 동의한다는 의사표시를 함으로서 회원가입을 신청합니다.
+                회원은 회사가 정한 가입 양식에 따라 아이디, 비밀번호 등 회원정보를 기입한 후 이 약관에 동의한다는 의사표시를 함으로서 회원가입을 신청합니다.
               </Typography>
 
               <Typography variant="h5" sx={{ mt: 4, mb: 2, fontWeight: 600 }}>
