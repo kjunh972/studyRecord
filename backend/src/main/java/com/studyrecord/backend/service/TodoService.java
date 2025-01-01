@@ -29,7 +29,7 @@ public class TodoService {
     @Transactional
     public TodoResponse createTodo(TodoRequest request) {
         try {
-            User user = userRepository.findById(1L)
+            User user = userRepository.findByUsername(request.getUsername())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             Todo todo = new Todo();

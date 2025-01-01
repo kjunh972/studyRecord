@@ -23,17 +23,16 @@ public class StudyRecordService {
     private final StudyRecordRepository studyRecordRepository;
     private final UserRepository userRepository;
 
+    @Transactional(readOnly = true)
     public List<StudyRecordResponse> getAllStudyRecordsByUsername(String username) {
         return studyRecordRepository.findAllByUserUsername(username).stream()
                 .map(StudyRecordResponse::from)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public StudyRecordResponse getStudyRecord(Long id) {
-        StudyRecord record = findStudyRecord(id);
-        record.getTags().size();
-        record.getReferences().size();
-        return StudyRecordResponse.from(record);
+        return StudyRecordResponse.from(findStudyRecord(id));
     }
 
     @Transactional
@@ -43,7 +42,7 @@ public class StudyRecordService {
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found: " + username));
 
-            log.info("Found user: {}", user.getUsername());
+            log.info("Found user with id: {}", user.getId());
             StudyRecord record = new StudyRecord();
             record.setUser(user);
             record.setTitle(request.getTitle());
@@ -57,7 +56,7 @@ public class StudyRecordService {
             log.info("Saved study record with ID: {}", savedRecord.getId());
             return StudyRecordResponse.from(savedRecord);
         } catch (Exception e) {
-            log.error("Error creating study record", e);
+            log.error("Failed to create study record for user {}: {}", username, e.getMessage(), e);
             throw new RuntimeException("Failed to create study record", e);
         }
     }

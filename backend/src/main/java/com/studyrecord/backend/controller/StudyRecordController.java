@@ -58,8 +58,9 @@ public class StudyRecordController {
         if (userDetails == null) {
             throw new AccessDeniedException("로그인이 필요한 서비스입니다.");
         }
-        log.info("Creating study record with user: {}", userDetails.getUsername());
+        log.info("Creating study record. User: {}, Title: {}", userDetails.getUsername(), request.getTitle());
         StudyRecordResponse response = studyRecordService.createStudyRecord(request, userDetails.getUsername());
+        log.info("Study record created successfully with ID: {}", response.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

@@ -39,21 +39,21 @@ public class AuthService {
     @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
+            .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BadCredentialsException("Invalid credentials");
+            throw new BadCredentialsException("Invalid password");
         }
 
-        String token = jwtUtil.generateToken(user.getId());
-        
+        String token = jwtUtil.generateToken(user.getUsername());
+
         return AuthResponse.builder()
-                .token(token)
-                .user(AuthResponse.UserDto.builder()
-                        .id(user.getId())
-                        .username(user.getUsername())
-                        .name(user.getName())
-                        .build())
-                .build();
+            .token(token)
+            .user(AuthResponse.UserDto.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .name(user.getName())
+                .build())
+            .build();
     }
 } 

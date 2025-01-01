@@ -31,7 +31,14 @@ public class TodoController {
     }
 
     @PostMapping
-    public ResponseEntity<TodoResponse> createTodo(@RequestBody TodoRequest request) {
+    public ResponseEntity<TodoResponse> createTodo(
+        @RequestBody TodoRequest request,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        if (userDetails == null) {
+            throw new AccessDeniedException("로그인이 필요한 서비스입니다.");
+        }
+        request.setUsername(userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(todoService.createTodo(request));
     }

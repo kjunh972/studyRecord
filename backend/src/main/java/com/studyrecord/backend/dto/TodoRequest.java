@@ -4,8 +4,10 @@ import com.studyrecord.backend.domain.TodoPeriod;
 import lombok.Getter;
 import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Setter;
 
 @Getter
+@Setter
 public class TodoRequest {
     private String task;
     
@@ -14,4 +16,5 @@ public class TodoRequest {
     
     private TodoPeriod period;
     private boolean completed;
+    private String username;
 } 

@@ -27,6 +27,39 @@ export default function SignUpPage() {
   })
   const navigate = useNavigate()
 
+  const formatPhoneNumber = (value: string) => {
+    // 숫자만 추출
+    const numbers = value.replace(/[^\d]/g, '')
+    
+    // 11자리로 제한
+    const trimmed = numbers.slice(0, 11)
+    
+    // xxx-xxxx-xxxx 형식으로 포맷팅
+    if (trimmed.length >= 3) {
+      if (trimmed.length >= 7) {
+        return `${trimmed.slice(0, 3)}-${trimmed.slice(3, 7)}-${trimmed.slice(7)}`
+      }
+      return `${trimmed.slice(0, 3)}-${trimmed.slice(3)}`
+    }
+    return trimmed
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.name === 'phone') {
+      // 전화번호 입력 시 포맷팅 적용
+      const formatted = formatPhoneNumber(e.target.value)
+      setFormData(prev => ({
+        ...prev,
+        [e.target.name]: formatted
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [e.target.name]: e.target.value
+      }))
+    }
+  }
+
   const validateForm = () => {
     const newErrors = {
       username: '',
@@ -77,14 +110,6 @@ export default function SignUpPage() {
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name as string]: value
-    }))
-  }
-
   return (
     <div className="flex justify-center items-center min-h-[calc(100vh-120px)] bg-background">
       <motion.div
@@ -121,7 +146,7 @@ export default function SignUpPage() {
                 name="username"
                 type="text"
                 value={formData.username}
-                onChange={handleInputChange}
+                onChange={handleChange}
                 error={!!errors.username}
                 helperText={errors.username}
                 required
@@ -140,7 +165,7 @@ export default function SignUpPage() {
                 name="password"
                 type="password"
                 value={formData.password}
-                onChange={handleInputChange}
+                onChange={handleChange}
                 error={!!errors.password}
                 helperText={errors.password}
                 required
@@ -156,7 +181,7 @@ export default function SignUpPage() {
                 name="passwordConfirm"
                 type="password"
                 value={formData.passwordConfirm}
-                onChange={handleInputChange}
+                onChange={handleChange}
                 error={!!errors.passwordConfirm}
                 helperText={errors.passwordConfirm}
                 required
@@ -171,7 +196,7 @@ export default function SignUpPage() {
                 label="이름"
                 name="name"
                 value={formData.name}
-                onChange={handleInputChange}
+                onChange={handleChange}
                 required
                 sx={{
                   '& .MuiOutlinedInput-root': {
@@ -180,20 +205,16 @@ export default function SignUpPage() {
                 }}
               />
               <TextField
-                fullWidth
-                label="전화번호"
                 name="phone"
+                label="전화번호"
                 value={formData.phone}
-                onChange={handleInputChange}
-                error={!!errors.phone}
-                helperText={errors.phone}
-                placeholder="010-1234-5678"
-                required
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    bgcolor: 'hsl(var(--background))'
-                  }
+                onChange={handleChange}
+                placeholder="01012345678"
+                inputProps={{
+                  maxLength: 13  // 하이픈 포함 최대 길이
                 }}
+                fullWidth
+                sx={{ mb: 2 }}
               />
               <TextField
                 fullWidth
@@ -201,7 +222,7 @@ export default function SignUpPage() {
                 name="birthdate"
                 type="date"
                 value={formData.birthdate}
-                onChange={handleInputChange}
+                onChange={handleChange}
                 required
                 InputLabelProps={{ shrink: true }}
                 sx={{

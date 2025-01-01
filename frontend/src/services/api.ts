@@ -9,7 +9,8 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`  // 헤더 형식 수정
+    console.log('Sending token:', token)  // 토큰 로깅 추가
+    config.headers['Authorization'] = `Bearer ${token}`
   }
   return config
 }, (error) => {

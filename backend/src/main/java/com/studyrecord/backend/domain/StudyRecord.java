@@ -27,10 +27,10 @@ public class StudyRecord {
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     private List<String> tags = new ArrayList<>();
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "study_record_reference_links")
     @Column(name = "reference_link")
     private List<String> references = new ArrayList<>();

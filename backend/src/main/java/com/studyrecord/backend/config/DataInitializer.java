@@ -2,25 +2,28 @@ package com.studyrecord.backend.config;
 
 import com.studyrecord.backend.domain.User;
 import com.studyrecord.backend.repository.UserRepository;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 
-@Configuration
+@Component
+@RequiredArgsConstructor
 public class DataInitializer {
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Bean
-    public CommandLineRunner initData(UserRepository userRepository) {
-        return args -> {
-            if (userRepository.count() == 0) {
-                User user = new User();
-                user.setUsername("testuser");
-                user.setName("Test User");
-                user.setPassword("password");
-                user.setPhone("010-1234-5678");
-                user.setBirthdate("2000-01-01");
-                userRepository.save(user);
-            }
-        };
+    @PostConstruct
+    public void init() {
+        if (userRepository.count() == 0) {
+            User adminUser = new User();
+            adminUser.setUsername("admin");
+            adminUser.setPassword(passwordEncoder.encode("admin972@"));
+            adminUser.setName("관리자");
+            adminUser.setPhone("010-0000-0000");
+            adminUser.setBirthdate("2001-03-17");
+
+            userRepository.save(adminUser);
+        }
     }
 } 
