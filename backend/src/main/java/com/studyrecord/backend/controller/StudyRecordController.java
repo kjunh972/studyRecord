@@ -24,17 +24,18 @@ public class StudyRecordController {
 
     @GetMapping
     public ResponseEntity<List<StudyRecordResponse>> getAllStudyRecords(@AuthenticationPrincipal UserDetails userDetails) {
-        log.info("Received request for getAllStudyRecords with user: {}", userDetails != null ? userDetails.getUsername() : "null");
         if (userDetails == null) {
             throw new AccessDeniedException("로그인이 필요한 서비스입니다.");
         }
-        List<StudyRecordResponse> records = studyRecordService.getAllStudyRecordsByUsername(userDetails.getUsername());
-        log.info("Returning {} records for user {}", records.size(), userDetails.getUsername());
         return ResponseEntity.ok(studyRecordService.getAllStudyRecordsByUsername(userDetails.getUsername()));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<StudyRecordResponse> getStudyRecord(@PathVariable("id") Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        if (id == null) {
+            throw new IllegalArgumentException("유효하지 않은 ID입니다.");
+        }
+
         StudyRecordResponse response = studyRecordService.getStudyRecord(id);
         
         // 인증되지 않은 사용자 처리
@@ -58,10 +59,14 @@ public class StudyRecordController {
         if (userDetails == null) {
             throw new AccessDeniedException("로그인이 필요한 서비스입니다.");
         }
-        log.info("Creating study record. User: {}, Title: {}", userDetails.getUsername(), request.getTitle());
-        StudyRecordResponse response = studyRecordService.createStudyRecord(request, userDetails.getUsername());
-        log.info("Study record created successfully with ID: {}", response.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        
+        try {
+            StudyRecordResponse response = studyRecordService.createStudyRecord(request, userDetails.getUsername());
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            log.error("Failed to create study record", e);
+            throw e;
+        }
     }
 
     @PutMapping("/{id}")

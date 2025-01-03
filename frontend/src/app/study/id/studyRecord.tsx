@@ -26,8 +26,7 @@ export default function StudyRecordPage() {
         if (!id) return
         const response = await studyRecordApi.getById(Number(id))
         setRecord(response.data)
-      } catch (error) {
-        console.error('학습 기록 로딩 실패:', error)
+      } catch {
         navigate('/')
       } finally {
         setLoading(false)

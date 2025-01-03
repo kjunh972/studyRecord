@@ -47,8 +47,8 @@ export default function MyPage() {
       try {
         const response = await studyRecordApi.getAll()
         setStudyRecords(response.data)
-      } catch (error) {
-        console.error('학습 기록 로딩 실패:', error)
+      } catch {
+        setStudyRecords([])
       } finally {
         setLoading(false)
       }

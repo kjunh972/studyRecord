@@ -21,12 +21,15 @@ export default function EditStudyRecord() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { theme = 'light' } = useTheme() || {}
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [tags, setTags] = useState('')
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+    tags: '',
+    editorMode: 'basic' as EditorMode,
+    isPublic: true
+  })
   const [isModified, setIsModified] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [editorMode, setEditorMode] = useState<EditorMode>('basic')
   const [showPreview, setShowPreview] = useState(true)
 
   const { showDialog, handleCancel, handleConfirm, message } = usePrompt(
@@ -37,28 +40,41 @@ export default function EditStudyRecord() {
   useEffect(() => {
     const fetchStudyRecord = async () => {
       try {
-        if (!id) return
+        if (!id) {
+          navigate('/')
+          return
+        }
         const response = await studyRecordApi.getById(Number(id))
-        const record = response.data
-        setTitle(record.title)
-        setContent(record.content)
-        setTags(record.tags.join(', '))
-        setEditorMode(record.editorMode)
-        setLoading(false)
+        setFormData({
+          title: response.data.title,
+          content: response.data.content,
+          tags: response.data.tags.join(', '),
+          editorMode: response.data.editorMode,
+          isPublic: response.data.isPublic
+        })
         setIsModified(false)
-      } catch (error) {
-        console.error('학습 기록 로딩 실패:', error)
-        navigate('/')
+      } catch (error: any) {
+        if (error.response?.status === 403 || error.response?.status === 401) {
+          navigate('/login')
+        } else {
+          alert('학습 기록을 불러오는데 실패했습니다.')
+          navigate('/')
+        }
+      } finally {
+        setLoading(false)
       }
     }
-    fetchStudyRecord()
+
+    if (id) {
+      fetchStudyRecord()
+    }
   }, [id, navigate])
 
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    const handleBeforeUnload = (e: Event) => {
       if (isModified) {
         e.preventDefault()
-        e.returnValue = ''
+        return ''
       }
     }
     window.addEventListener('beforeunload', handleBeforeUnload)
@@ -67,58 +83,56 @@ export default function EditStudyRecord() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title.trim() || !content.trim()) {
-      alert('제목과 내용을 입력해세요.')
+    if (!formData.title.trim() || !formData.content.trim()) {
+      alert('제목과 내용을 입력해주세요.')
       return
     }
 
     setLoading(true)
+    setIsModified(false)
     try {
-      const updatedRecord = {
-        title: title.trim(),
-        content: content.trim(),
-        editorMode,
-        tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        references: [],
-        isPublic: true
+      await studyRecordApi.update(Number(id), {
+        ...formData,
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+      })
+      navigate(`/study/${id}`, { replace: true })
+    } catch (error: any) {
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        navigate('/login')
+      } else {
+        console.error('학습 기록 수정 실패:', error)
+        alert('학습 기록 수정에 실패했습니다.')
+        setIsModified(true)
       }
-      
-      setIsModified(false)
-      await studyRecordApi.update(Number(id), updatedRecord)
-      navigate(`/study/${id}`)
-    } catch (error) {
-      console.error('학습 기록 수정 실패:', error)
-      alert('학습 기록 수정에 실패했습니다.')
-      setIsModified(true)
     } finally {
       setLoading(false)
     }
   }
 
   const handleTextFieldChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setContent(e.target.value)
+    setFormData({ ...formData, content: e.target.value })
     setIsModified(true)
   }
 
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {
-      setContent(value)
+      setFormData({ ...formData, content: value })
       setIsModified(true)
     }
   }
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(e.target.value)
+    setFormData({ ...formData, title: e.target.value })
     setIsModified(true)
   }
 
   const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTags(e.target.value)
+    setFormData({ ...formData, tags: e.target.value })
     setIsModified(true)
   }
 
   const renderEditor = () => {
-    switch (editorMode) {
+    switch (formData.editorMode) {
       case 'basic':
         return (
           <Box sx={{ display: 'flex', width: '100%' }}>
@@ -127,7 +141,7 @@ export default function EditStudyRecord() {
                 multiline
                 rows={17}
                 fullWidth
-                value={content}
+                value={formData.content}
                 onChange={handleTextFieldChange}
                 placeholder="내용을 입력하세요..."
                 sx={{
@@ -159,7 +173,7 @@ export default function EditStudyRecord() {
                   padding: '1rem',
                   color: theme === 'dark' ? 'hsl(var(--foreground))' : '#000000'
                 }}>
-                  <div style={{ whiteSpace: 'pre-wrap' }}>{content}</div>
+                  <div style={{ whiteSpace: 'pre-wrap' }}>{formData.content}</div>
                 </div>
               </Box>
             )}
@@ -176,7 +190,7 @@ export default function EditStudyRecord() {
               }}
             >
               <MDEditor
-                value={content}
+                value={formData.content}
                 onChange={handleEditorChange}
                 height={400}
                 visibleDragbar={false}
@@ -207,7 +221,7 @@ export default function EditStudyRecord() {
                   }
                 }}>
                   <div data-color-mode={theme === 'dark' ? 'dark' : 'light'}>
-                    <MarkdownRenderer content={content} />
+                    <MarkdownRenderer content={formData.content} />
                   </div>
                 </Box>
               )}
@@ -244,7 +258,7 @@ export default function EditStudyRecord() {
             <TextField
               fullWidth
               label="제목"
-              value={title}
+              value={formData.title}
               onChange={handleTitleChange}
               required
               sx={{
@@ -267,9 +281,9 @@ export default function EditStudyRecord() {
                 alignItems: 'center'
               }}>
                 <ToggleButtonGroup
-                  value={editorMode}
+                  value={formData.editorMode}
                   exclusive
-                  onChange={(_, newMode) => newMode && setEditorMode(newMode)}
+                  onChange={(_, newMode) => newMode && setFormData({ ...formData, editorMode: newMode })}
                   size="small"
                   sx={{
                     '& .MuiToggleButton-root': {
@@ -310,7 +324,7 @@ export default function EditStudyRecord() {
             <TextField
               fullWidth
               label="태그 (쉼표로 구분)"
-              value={tags}
+              value={formData.tags}
               onChange={handleTagsChange}
               placeholder="예: Spring Boot, java, React, Typescript, web"
               sx={{

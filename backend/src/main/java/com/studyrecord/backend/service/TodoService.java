@@ -1,7 +1,6 @@
 package com.studyrecord.backend.service;
 
 import com.studyrecord.backend.domain.Todo;
-import com.studyrecord.backend.domain.TodoPeriod;
 import com.studyrecord.backend.domain.User;
 import com.studyrecord.backend.dto.TodoRequest;
 import com.studyrecord.backend.dto.TodoResponse;

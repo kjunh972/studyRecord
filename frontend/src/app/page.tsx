@@ -20,25 +20,22 @@ export default function HomePage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (isAuthenticated) {
-        try {
-          console.log('Fetching data with token:', localStorage.getItem('token'))
-          const [recordsRes, todosRes] = await Promise.all([
-            studyRecordApi.getAll(),
-            todoApi.getAll()
-          ])
-          console.log('Study Records Response:', recordsRes.data)
-          console.log('Todos Response:', todosRes.data)
-          setStudyRecords(recordsRes.data)
-          setTodos(todosRes.data)
-        } catch (error: any) {
-          console.error('Error details:', error.response?.data)
-          console.error('데이터 로딩 실패:', error)
-        }
+      try {
+        const [studyResponse, todoResponse] = await Promise.all([
+          studyRecordApi.getAll(),
+          todoApi.getAll()
+        ])
+        setStudyRecords(studyResponse.data)
+        setTodos(todoResponse.data)
+      } finally {
+        setLoading(false)
       }
+    }
+    if (isAuthenticated) {
+      fetchData()
+    } else {
       setLoading(false)
     }
-    fetchData()
   }, [isAuthenticated])
 
   // 날짜별로 레코드 그룹화하는 함수
@@ -76,9 +73,27 @@ export default function HomePage() {
   return (
     <div className="container mx-auto p-4 space-y-8">
       <section>
-        <Typography variant="h4" sx={{ fontWeight: 700, mb: 4, color: 'hsl(var(--foreground))' }}>
-          학습 기록
-        </Typography>
+        <div className="flex justify-between items-center mb-6">
+          <Typography variant="h4" sx={{ fontWeight: 700, color: 'hsl(var(--foreground))' }}>
+            RECENT STUDY RECORDS
+          </Typography>
+          {isAuthenticated && (
+            <Button
+              component={Link}
+              to="/study/new"
+              startIcon={<PlusCircle size={20} />}
+              sx={{ 
+                bgcolor: 'hsl(var(--primary))',
+                color: 'hsl(var(--primary-foreground))',
+                '&:hover': {
+                  bgcolor: 'hsl(var(--primary) / 0.9)'
+                }
+              }}
+            >
+              NEW RECORD
+            </Button>
+          )}
+        </div>
         {!isAuthenticated ? (
           <Card sx={{ 
             bgcolor: 'hsl(var(--background))', 
@@ -152,9 +167,9 @@ export default function HomePage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
             {groupedRecords.map(([date, records]) => (
-              <div key={date}>
+              <div key={date} className="mb-12">
                 <Typography 
                   variant="h6" 
                   sx={{ 
@@ -166,7 +181,7 @@ export default function HomePage() {
                 >
                   {date}
                 </Typography>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {records.map((record) => (
                     <Card 
                       key={record.id} 
@@ -175,11 +190,17 @@ export default function HomePage() {
                         bgcolor: 'hsl(var(--card))',
                         color: 'hsl(var(--card-foreground))',
                         border: '1px solid hsl(var(--border))',
-                        borderRadius: 'var(--radius)'
+                        borderRadius: 'var(--radius)',
+                        maxWidth: '100%'
                       }}
                     >
-                      <CardContent sx={{ p: 3 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'hsl(var(--foreground))' }}>
+                      <CardContent sx={{ p: 2.5 }}>
+                        <Typography variant="h6" sx={{ 
+                          fontWeight: 600, 
+                          mb: 1, 
+                          color: 'hsl(var(--foreground))',
+                          fontSize: '1.2rem'
+                        }}>
                           {record.title}
                         </Typography>
                         <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 2 }}>
