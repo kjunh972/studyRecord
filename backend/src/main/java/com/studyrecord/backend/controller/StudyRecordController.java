@@ -38,12 +38,10 @@ public class StudyRecordController {
 
         StudyRecordResponse response = studyRecordService.getStudyRecord(id);
         
-        // 인증되지 않은 사용자 처리
         if (userDetails == null) {
             throw new AccessDeniedException("로그인이 필요한 서비스입니다.");
         }
         
-        // 작성자 확인
         if (!response.getUser().getUsername().equals(userDetails.getUsername())) {
             throw new AccessDeniedException("해당 학습 기록에 대한 접근 권한이 없습니다.");
         }
@@ -64,7 +62,7 @@ public class StudyRecordController {
             StudyRecordResponse response = studyRecordService.createStudyRecord(request, userDetails.getUsername());
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
-            log.error("Failed to create study record", e);
+            log.error("학습 기록 생성 실패 : ", e);
             throw e;
         }
     }

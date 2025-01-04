@@ -6,7 +6,7 @@ import {
   IconButton, Tooltip, Divider
 } from '@mui/material'
 import { 
-  Bell, Settings, LogOut, BookOpen, Clock, 
+  UserCog, Trash2, LogOut, BookOpen, Clock, 
   Calendar, TrendingUp, Activity, FileX
 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts'
@@ -156,14 +156,32 @@ export default function MyPage() {
                   </Box>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Tooltip title="알림">
-                    <IconButton sx={{ border: 1, borderColor: 'divider' }}>
-                      <Bell size={18} />
+                  <Tooltip title="정보수정">
+                    <IconButton 
+                      sx={{ 
+                        border: 1, 
+                        borderColor: 'divider',
+                        '&:hover': {
+                          color: 'hsl(var(--destructive))',
+                          borderColor: 'hsl(var(--destructive))'
+                        }
+                      }}
+                    >
+                      <UserCog size={18} />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="설정">
-                    <IconButton sx={{ border: 1, borderColor: 'divider' }}>
-                      <Settings size={18} />
+                  <Tooltip title="회원탈퇴">
+                    <IconButton 
+                      sx={{ 
+                        border: 1, 
+                        borderColor: 'divider',
+                        '&:hover': {
+                          color: 'hsl(var(--destructive))',
+                          borderColor: 'hsl(var(--destructive))'
+                        }
+                      }}
+                    >
+                      <Trash2 size={18} />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="로그아웃">
@@ -173,8 +191,8 @@ export default function MyPage() {
                         border: 1, 
                         borderColor: 'divider',
                         '&:hover': {
-                          color: 'error.main',
-                          borderColor: 'error.main'
+                          color: 'hsl(var(--destructive))',
+                          borderColor: 'hsl(var(--destructive))'
                         }
                       }}
                     >

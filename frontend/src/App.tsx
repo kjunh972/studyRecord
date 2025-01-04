@@ -12,8 +12,6 @@ import SignUpPage from './app/user/signup';
 import TermsOfServicePage from './app/user/terms';
 import PrivacyPolicyPage from './app/user/privacy';
 import MyPage from './app/user/myPage';
-import EditStudyRecord from './app/study/edit/id/editStudy';
-import StudyRecordPage from './app/study/id/studyRecord';
 
 // 앱의 메인 컴포넌트
 export default function App() {
@@ -34,22 +32,6 @@ export default function App() {
               element: (
                 <ProtectedRoute>
                   <MyPage />
-                </ProtectedRoute>
-              )
-            },
-            {
-              path: "study/edit/:id(\\d+)",
-              element: (
-                <ProtectedRoute>
-                  <EditStudyRecord />
-                </ProtectedRoute>
-              )
-            },
-            {
-              path: "study/:id(\\d+)",
-              element: (
-                <ProtectedRoute>
-                  <StudyRecordPage />
                 </ProtectedRoute>
               )
             },

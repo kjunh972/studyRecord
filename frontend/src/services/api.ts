@@ -21,7 +21,6 @@ api.interceptors.request.use((config) => {
   if (token && !isTokenExpired(token)) {
     config.headers['Authorization'] = `Bearer ${token}`
   } else if (token) {
-    // 토큰이 만료되었으면 로그아웃 처리
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     sessionStorage.setItem('redirectUrl', window.location.pathname)
@@ -53,7 +52,16 @@ export const studyRecordApi = {
     if (!id || isNaN(id)) {
       throw new Error('유효하지 않은 ID입니다.');
     }
-    return api.get<StudyRecord>(`/study-records/${id}`)
+    try {
+      const url = `/study-records/${id}`;
+      const response = await api.get<StudyRecord>(url);
+      if (!response.data) {
+        throw new Error('데이터가 없습니다.');
+      }
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
   create: async (data: Omit<StudyRecord, 'id' | 'createdAt' | 'updatedAt'>) => {
     const response = await api.post<StudyRecord>('/study-records', data)

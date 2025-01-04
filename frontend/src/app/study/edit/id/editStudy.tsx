@@ -44,13 +44,21 @@ export default function EditStudyRecord() {
           navigate('/')
           return
         }
+        setLoading(true)
         const response = await studyRecordApi.getById(Number(id))
+
+        if (!response || !response.data) {
+          alert('학습 기록을 찾을 수 없습니다.')
+          navigate('/')
+          return
+        }
+
         setFormData({
           title: response.data.title,
           content: response.data.content,
-          tags: response.data.tags.join(', '),
-          editorMode: response.data.editorMode,
-          isPublic: response.data.isPublic
+          tags: response.data.tags?.join(', ') || '',
+          editorMode: response.data.editorMode || 'basic',
+          isPublic: response.data.isPublic ?? true
         })
         setIsModified(false)
       } catch (error: any) {
@@ -100,7 +108,6 @@ export default function EditStudyRecord() {
       if (error.response?.status === 403 || error.response?.status === 401) {
         navigate('/login')
       } else {
-        console.error('학습 기록 수정 실패:', error)
         alert('학습 기록 수정에 실패했습니다.')
         setIsModified(true)
       }
@@ -233,8 +240,20 @@ export default function EditStudyRecord() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+      <div className="container mx-auto p-4">
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!formData.title && !loading) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="text-center">
+          <p>학습 기록을 찾을 수 없습니다.</p>
+        </div>
       </div>
     )
   }

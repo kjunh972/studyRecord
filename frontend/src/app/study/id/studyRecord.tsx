@@ -41,8 +41,11 @@ export default function StudyRecordPage() {
       await studyRecordApi.delete(Number(id))
       navigate('/')
     } catch (error) {
-      console.error('학습 기록 삭제 실패:', error)
     }
+  }
+
+  const handleEditClick = () => {
+    navigate(`/study/edit/${id}`)
   }
 
   const renderContent = () => {
