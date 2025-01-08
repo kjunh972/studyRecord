@@ -18,27 +18,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  useEffect(() => {
+  const validateToken = useCallback(async () => {
     const token = localStorage.getItem('token')
-    if (token) {
-      userApi.getMyInfo()
-        .then(response => {
-          setUser(response.data)
-        })
-        .catch(() => {
-          localStorage.removeItem('token')
-          setUser(null)
-        })
-        .finally(() => {
-          setLoading(false)
-        })
-    } else {
+    
+    try {
+      if (!token) {
+        setUser(null)
+        setIsAuthenticated(false)
+        setLoading(false)
+        if (!window.location.pathname.includes('/login')) {
+          window.location.replace('/login')
+        }
+        return
+      }
+
+      const response = await userApi.getMyInfo()
+      setUser(response.data)
+      setIsAuthenticated(true)
       setLoading(false)
+    } catch (error) {
+      localStorage.removeItem('token')
+      setUser(null)
+      setIsAuthenticated(false)
+      setLoading(false)
+      if (!window.location.pathname.includes('/login')) {
+        window.location.replace('/login')
+      }
     }
   }, [])
 
+  useEffect(() => {
+    validateToken()
+  }, [validateToken])
+
   const login = useCallback(async (username: string, password: string) => {
     try {
+      setLoading(true)
       const response = await authService.login({ username, password });
       localStorage.setItem('token', response.token);
       
@@ -47,14 +62,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsAuthenticated(true);
     } catch (error) {
       throw error;
+    } finally {
+      setLoading(false)
     }
   }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('token')
     setUser(null)
     setIsAuthenticated(false)
-  }
+    window.location.replace('/login')
+  }, [])
 
   return (
     <AuthContext.Provider value={{ 

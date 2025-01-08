@@ -601,29 +601,58 @@ export default function MyPage() {
                   width: '100%',
                   mb: 3
                 }}>
-                  <Box sx={{ textAlign: 'center' }}>
+                  <Box sx={{ textAlign: 'center', position: 'relative' }}>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                       {studyRecords.length}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      학습기록
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">
+                        학습기록
+                      </Typography>
+                      <Tooltip
+                        title="작성한 총 학습 기록의 개수입니다. 하루에 여러 번 기록할 수 있습니다."
+                        arrow
+                        placement="top"
+                      >
+                        <Info size={16} color="gray" style={{ cursor: 'help', marginLeft: '4px' }} />
+                      </Tooltip>
+                    </Box>
                   </Box>
-                  <Box sx={{ textAlign: 'center' }}>
+
+                  <Box sx={{ textAlign: 'center', position: 'relative' }}>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                       {getUniqueStudyDays()}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      학습일수
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">
+                        학습일수
+                      </Typography>
+                      <Tooltip
+                        title="실제로 학습한 날의 수입니다. 하루에 여러 번 기록해도 1일로 계산됩니다."
+                        arrow
+                        placement="top"
+                      >
+                        <Info size={16} color="gray" style={{ cursor: 'help', marginLeft: '4px' }} />
+                      </Tooltip>
+                    </Box>
                   </Box>
-                  <Box sx={{ textAlign: 'center' }}>
+
+                  <Box sx={{ textAlign: 'center', position: 'relative' }}>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                       {Math.round(studyRecords.length / getUniqueStudyDays() * 10) / 10}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      일평균
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">
+                        일평균
+                      </Typography>
+                      <Tooltip
+                        title="하루 평균 학습 기록 횟수입니다. (총 학습 기록 ÷ 학습 일수)"
+                        arrow
+                        placement="top"
+                      >
+                        <Info size={16} color="gray" style={{ cursor: 'help', marginLeft: '4px' }} />
+                      </Tooltip>
+                    </Box>
                   </Box>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>

@@ -2,7 +2,7 @@ import axios from 'axios'
 import { StudyRecord, Todo, TodoRequest } from '../types'
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:4000',
   withCredentials: true
 })
 
@@ -22,32 +22,19 @@ api.interceptors.request.use(
 
 // 응답 인터셉터
 api.interceptors.response.use(
-  response => response,
-  error => {
-    // URL에서 /api 접두사 제거
-    const path = error.config.url?.replace('/api', '') || '';
-    
-    // 로그인 실패는 조용히 처리
-    if (path === '/auth/login') {
-      return Promise.reject(error);
-    }
-    
-    // 401 에러 처리
-    if (error.response?.status === 401 && path !== '/auth/login') {
-      localStorage.removeItem('token');
+  (response) => response,
+  (error) => {
+    // 401 Unauthorized 에러 처리
+    if (error.response?.status === 401) {
+      // 로컬 스토리지의 토큰 제거
+      localStorage.removeItem('token')
+      // ��재 페이지가 로그인 페이지가 아닐 경우에만 리다이렉트
       if (!window.location.pathname.includes('/login')) {
-        window.location.replace('/login');
+        // 강제 새로고침으로 상태 초기화 및 리다이렉트
+        window.location.replace('/login')
       }
     }
-    
-    // 비밀번호 변경 엔드포인트에 대한 400 에러는 조용히 처리
-    if (error.config.url === '/api/users/password' && error.response?.status === 400) {
-      return Promise.reject(error);
-    }
-    
-    // 다른 에러는 콘솔에 표시
-    console.error('API Error:', error);
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
 );
 
