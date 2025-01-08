@@ -24,17 +24,29 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   response => response,
   error => {
-    // 로그인 API 호출의 경우 에러 객체를 단순화
-    if (error.config.url === '/api/auth/login') {
-      const loginError = new Error('로그인 실패');
-      loginError.name = 'LoginError';  // 스택 트레이스 단순화
-      return Promise.reject(loginError);
+    // URL에서 /api 접두사 제거
+    const path = error.config.url?.replace('/api', '') || '';
+    
+    // 로그인 실패는 조용히 처리
+    if (path === '/auth/login') {
+      return Promise.reject(error);
     }
     
-    if (error.response?.status === 401 && !error.config.url.includes('/auth/login')) {
+    // 401 에러 처리
+    if (error.response?.status === 401 && path !== '/auth/login') {
       localStorage.removeItem('token');
+      if (!window.location.pathname.includes('/login')) {
+        window.location.replace('/login');
+      }
     }
     
+    // 비밀번호 변경 엔드포인트에 대한 400 에러는 조용히 처리
+    if (error.config.url === '/api/users/password' && error.response?.status === 400) {
+      return Promise.reject(error);
+    }
+    
+    // 다른 에러는 콘솔에 표시
+    console.error('API Error:', error);
     return Promise.reject(error);
   }
 );

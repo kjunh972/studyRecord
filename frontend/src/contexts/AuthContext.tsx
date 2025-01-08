@@ -6,7 +6,7 @@ import { authService } from '../services/auth'
 interface AuthContextType {
   isAuthenticated: boolean
   user: AuthResponse['user'] | null
-  login: (username: string, password: string) => Promise<AuthResponse>
+  login: (username: string, password: string) => Promise<void>
   logout: () => void
   loading: boolean
 }
@@ -24,19 +24,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       userApi.getMyInfo()
         .then(response => {
           setUser(response.data)
-          setIsAuthenticated(true)
         })
         .catch(() => {
           localStorage.removeItem('token')
           setUser(null)
-          setIsAuthenticated(false)
         })
         .finally(() => {
           setLoading(false)
         })
     } else {
       setLoading(false)
-      setIsAuthenticated(false)
     }
   }, [])
 
@@ -44,13 +41,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await authService.login({ username, password });
       localStorage.setItem('token', response.token);
-      setUser(response.user);
+      
+      const userResponse = await userApi.getMyInfo();
+      setUser(userResponse.data);
       setIsAuthenticated(true);
-      return response;
     } catch (error) {
-      setUser(null);
-      setIsAuthenticated(false);
-      localStorage.removeItem('token');
       throw error;
     }
   }, []);

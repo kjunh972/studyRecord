@@ -19,23 +19,22 @@ export default function LoginPage() {
     event.preventDefault();
     event.stopPropagation();
     
-    if (isLoading) return;
-    
     setIsLoading(true);
     setError('');
     
     const formElement = event.currentTarget;
-    const username = formElement.username.value;
-    const password = formElement.password.value;
+    const formData = new FormData(formElement);
     
     try {
-      await login(username, password);
+      await login(formData.get('username') as string, formData.get('password') as string);
+      
       const params = new URLSearchParams(location.search);
       const redirectTo = params.get('redirect') || '/';
-      navigate(redirectTo, { state: { from: 'login' } });
+      
+      navigate(redirectTo, { replace: true });
     } catch (err: any) {
       setError('아이디 또는 비밀번호가 일치하지 않습니다.');
-      formElement.password.value = '';
+      formElement.querySelector<HTMLInputElement>('input[name="password"]')!.value = '';
     } finally {
       setIsLoading(false);
     }
