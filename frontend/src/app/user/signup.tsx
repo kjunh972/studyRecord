@@ -60,6 +60,30 @@ export default function SignUpPage() {
     }
   }
 
+  const validatePassword = (password: string) => {
+    const minLength = 8;
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    const errors = [];
+    
+    if (password.length < minLength) {
+      errors.push('비밀번호는 8자 이상이어야 합니다.');
+    }
+    if (!hasLowerCase) {
+      errors.push('소문자를 포함해야 합니다.');
+    }
+    if (!hasNumber) {
+      errors.push('숫자를 포함해야 합니다.');
+    }
+    if (!hasSpecialChar) {
+      errors.push('특수문자를 포함해야 합니다.');
+    }
+    
+    return errors.length > 0 ? errors.join('\n') : '';
+  };
+
   const validateForm = () => {
     const newErrors = {
       username: '',
@@ -72,8 +96,9 @@ export default function SignUpPage() {
       newErrors.username = '아이디는 4자 이상이어야 합니다'
     }
 
-    if (formData.password.length < 8) {
-      newErrors.password = '비밀번호는 8자 이상이어야 합니다'
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      newErrors.password = passwordError;
     }
 
     if (formData.password !== formData.passwordConfirm) {

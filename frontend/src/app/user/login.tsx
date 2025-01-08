@@ -1,41 +1,45 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { 
   TextField, Button, Card, CardContent, Typography, Box,
-  CircularProgress, Divider
+  CircularProgress, Divider, Alert
 } from '@mui/material'
 import { GitHub } from '@mui/icons-material'
 import { motion } from "framer-motion"
 import { useAuth } from '../../contexts/AuthContext'
-import { authService } from '../../services/auth'
 
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [error, setError] = useState('')
-  const navigate = useNavigate()
-  const { login } = useAuth()
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setIsLoading(true)
-    setError('')
-
-    const form = event.currentTarget
-    const formData = new FormData(form)
-    const username = formData.get('username') as string
-    const password = formData.get('password') as string
-
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    setError('');
+    
+    const formElement = event.currentTarget;
+    const username = formElement.username.value;
+    const password = formElement.password.value;
+    
     try {
-      const response = await authService.login({ username, password })
-      login(response)
-      navigate('/')
-    } catch (error) {
-      console.error('로그인 실패:', error)
-      setError('아이디 또는 비밀번호가 올바르지 않습니다')
+      await login(username, password);
+      const params = new URLSearchParams(location.search);
+      const redirectTo = params.get('redirect') || '/';
+      navigate(redirectTo, { state: { from: 'login' } });
+    } catch (err: any) {
+      setError('아이디 또는 비밀번호가 일치하지 않습니다.');
+      formElement.password.value = '';
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex justify-center items-center min-h-[calc(100vh-120px)] bg-background">
@@ -52,6 +56,16 @@ export default function LoginPage() {
           borderRadius: 'var(--radius)'
         }}>
           <CardContent sx={{ p: 4 }}>
+            {error && (
+              <Alert 
+                severity="error" 
+                sx={{ mb: 2 }}
+                onClose={() => setError('')}
+              >
+                {error}
+              </Alert>
+            )}
+            
             <Typography variant="h4" sx={{ 
               mb: 1,
               color: 'hsl(var(--foreground))',
@@ -66,7 +80,11 @@ export default function LoginPage() {
               아이디와 비밀번호를 입력하여 로그인하세요
             </Typography>
 
-            <form onSubmit={onSubmit} className="space-y-4">
+            <form 
+              onSubmit={handleSubmit} 
+              className="space-y-4"
+              noValidate
+            >
               <TextField
                 fullWidth
                 label="아이디"
@@ -162,12 +180,6 @@ export default function LoginPage() {
                 회원가입
               </Link>
             </Typography>
-
-            {error && (
-              <Typography color="error" sx={{ mt: 2, textAlign: 'center' }}>
-                {error}
-              </Typography>
-            )}
           </CardContent>
         </Card>
       </motion.div>

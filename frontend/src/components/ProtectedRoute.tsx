@@ -1,11 +1,17 @@
-import type { ReactNode, ReactElement } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
-export const ProtectedRoute = ({ children }: { children: ReactNode }): ReactElement => {
-  const isAuthenticated = !!localStorage.getItem('token'); // 토큰 존재 여부로 인증 확인
+export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  const location = useLocation();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    // 현재 경로를 redirect 파라미터로 포함
+    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
 
   return <>{children}</>;

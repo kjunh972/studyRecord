@@ -10,4 +10,5 @@ import java.util.List;
 public interface StudyRecordRepository extends JpaRepository<StudyRecord, Long> {
     List<StudyRecord> findAllByOrderByCreatedAtDesc();
     List<StudyRecord> findAllByUserUsername(String username);
+    void deleteAllByUserId(Long userId);
 } 

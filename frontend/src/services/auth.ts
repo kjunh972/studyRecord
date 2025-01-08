@@ -1,15 +1,18 @@
-import axiosInstance from './axios'
+import api from './api'
 import { SignUpRequest, LoginRequest, AuthResponse } from '../types/auth'
 
 export const authService = {
   async signup(data: SignUpRequest): Promise<void> {
-    await axiosInstance.post('/auth/signup', data)
+    await api.post('/auth/signup', data)
   },
 
   async login(data: LoginRequest): Promise<AuthResponse> {
-    const response = await axiosInstance.post<AuthResponse>('/auth/login', data)
-    localStorage.setItem('token', response.data.token)
-    return response.data
+    try {
+      const response = await api.post<AuthResponse>('/auth/login', data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
   logout() {

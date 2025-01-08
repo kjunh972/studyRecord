@@ -2,6 +2,9 @@ export interface User {
   id: number;
   email: string;
   username: string;
+  name: string;
+  phone: string | null;
+  birthdate: string | null;
 }
 
 export interface StudyRecord {

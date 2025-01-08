@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { StudyRecord } from '../../../types'
 import { 
   Card, CardContent, CardHeader, Typography, IconButton, 
@@ -19,6 +19,10 @@ export default function StudyRecordPage() {
   const [record, setRecord] = useState<StudyRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [openDialog, setOpenDialog] = useState(false)
+
+  const handleEditClick = () => {
+    navigate(`/study/edit/${id}`)
+  }
 
   useEffect(() => {
     const fetchStudyRecord = async () => {
@@ -42,10 +46,6 @@ export default function StudyRecordPage() {
       navigate('/')
     } catch (error) {
     }
-  }
-
-  const handleEditClick = () => {
-    navigate(`/study/edit/${id}`)
   }
 
   const renderContent = () => {
@@ -96,14 +96,11 @@ export default function StudyRecordPage() {
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Tooltip title="수정">
                 <IconButton 
-                  component={Link} 
-                  to={`/study/edit/${id}`}
+                  onClick={handleEditClick}
                   sx={{ 
-                    color: 'hsl(var(--primary))',
-                    '&:hover': { 
-                      bgcolor: 'hsl(var(--primary) / 0.1)',
-                      transform: 'scale(1.1)',
-                      transition: 'all 0.2s'
+                    color: 'hsl(var(--muted-foreground))',
+                    '&:hover': {
+                      color: 'hsl(var(--primary))'
                     }
                   }}
                 >

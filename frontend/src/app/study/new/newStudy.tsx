@@ -64,7 +64,7 @@ export default function NewStudyRecord() {
         tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
         references: [],
         isPublic: true,
-        user: { id: 1, email: '', username: '' }
+        user: { id: 1, email: '', username: '', name: '', phone: '', birthdate: '' }
       }
       
       setIsModified(false)

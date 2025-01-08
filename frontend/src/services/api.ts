@@ -2,49 +2,42 @@ import axios from 'axios'
 import { StudyRecord, Todo, TodoRequest } from '../types'
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL
+  baseURL: process.env.REACT_APP_API_URL,
+  withCredentials: true
 })
 
-// 토큰 만료 시간 확인
-const isTokenExpired = (token: string): boolean => {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.exp * 1000 < Date.now()
-  } catch {
-    return true
-  }
-}
-
-// 요청 인터셉터 수정
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token && !isTokenExpired(token)) {
-    config.headers['Authorization'] = `Bearer ${token}`
-  } else if (token) {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    sessionStorage.setItem('redirectUrl', window.location.pathname)
-    window.location.href = '/login'
-  }
-  return config
-}, (error) => {
-  return Promise.reject(error)
-})
-
-// 응답 인터셉터 수정
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 403 || error.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      sessionStorage.setItem('redirectUrl', window.location.pathname)
-      window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname)
-      return Promise.reject(new Error('로그인이 필요합니다.'))
+// 요청 인터셉터
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    return Promise.reject(error)
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-)
+);
+
+// 응답 인터셉터
+api.interceptors.response.use(
+  response => response,
+  error => {
+    // 로그인 API 호출의 경우 에러 객체를 단순화
+    if (error.config.url === '/api/auth/login') {
+      const loginError = new Error('로그인 실패');
+      loginError.name = 'LoginError';  // 스택 트레이스 단순화
+      return Promise.reject(loginError);
+    }
+    
+    if (error.response?.status === 401 && !error.config.url.includes('/auth/login')) {
+      localStorage.removeItem('token');
+    }
+    
+    return Promise.reject(error);
+  }
+);
 
 export const studyRecordApi = {
   getAll: () => api.get<StudyRecord[]>('/study-records'),
@@ -86,6 +79,15 @@ export const todoApi = {
   create: (todo: TodoRequest) => api.post<Todo>('/todos', todo),
   update: (id: number, todo: Partial<Todo>) => api.put<Todo>(`/todos/${id}`, todo),
   delete: (id: number) => api.delete(`/todos/${id}`),
+}
+
+export const userApi = {
+  getMyInfo: () => api.get('/users/me'),
+  updatePassword: (data: { currentPassword: string; newPassword: string }) => 
+    api.patch('/users/password', data),
+  updateProfile: (data: { name: string; phone: string; birthdate: string }) =>
+    api.patch('/users/profile', data),
+  deleteAccount: () => api.delete('/users/me')
 }
 
 export default api 
