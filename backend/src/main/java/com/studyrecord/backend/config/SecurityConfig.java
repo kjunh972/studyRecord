@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/users/password").authenticated()
                 .requestMatchers("/api/users/profile").authenticated()
                 .requestMatchers("/api/users/me").authenticated()
+                .requestMatchers("/api/todos/**").authenticated()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

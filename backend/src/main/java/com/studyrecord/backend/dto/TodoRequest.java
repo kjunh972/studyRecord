@@ -2,19 +2,28 @@ package com.studyrecord.backend.dto;
 
 import com.studyrecord.backend.domain.TodoPeriod;
 import lombok.Getter;
-import java.time.LocalDateTime;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Setter;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 
 @Getter
 @Setter
 public class TodoRequest {
-    private String task;
+    @NotBlank
+    private String title;
     
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime dueDate;
+    @NotNull
+    private LocalDate dueDate;
+    
+    private LocalDate startDate;
+    private LocalTime startTime;
+    private LocalTime endTime;
     
     private TodoPeriod period;
+    private String location;
+    private List<String> tags;
     private boolean completed;
-    private String username;
 } 

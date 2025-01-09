@@ -22,12 +22,27 @@ export interface StudyRecord {
 
 export interface Todo {
   id: number;
-  task: string;
+  title: string;
   dueDate: string;
-  period: TodoPeriod;
+  startDate?: string;
+  startTime?: string;
+  endTime?: string;
+  period?: TodoPeriod;
   completed: boolean;
+  createdAt: string;
+  updatedAt: string;
+  location?: string;
+  tags: string[];
 }
 
-export type TodoRequest = Omit<Todo, 'id' | 'user'>;
+export interface TodoRequest {
+  title: string;
+  dueDate?: string;
+  startDate?: string;
+  startTime?: string;
+  endTime?: string;
+  location?: string;
+  tags?: string[];
+}
 
 export type TodoPeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY'; 

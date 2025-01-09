@@ -6,6 +6,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.studyrecord.backend.service.TodoService;
 import com.studyrecord.backend.dto.TodoRequest;
@@ -31,6 +32,7 @@ public class TodoController {
     }
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TodoResponse> createTodo(
         @RequestBody TodoRequest request,
         @AuthenticationPrincipal UserDetails userDetails
@@ -38,9 +40,7 @@ public class TodoController {
         if (userDetails == null) {
             throw new AccessDeniedException("로그인이 필요한 서비스입니다.");
         }
-        request.setUsername(userDetails.getUsername());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(todoService.createTodo(request));
+        return ResponseEntity.ok(todoService.createTodo(request, userDetails.getUsername()));
     }
 
     @PutMapping("/{id}")
@@ -61,7 +61,20 @@ public class TodoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTodo(@PathVariable Long id) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteTodo(
+        @PathVariable Long id,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        if (userDetails == null) {
+            throw new AccessDeniedException("로그인이 필요한 서비스입니다.");
+        }
+
+        TodoResponse todo = todoService.getTodo(id);
+        if (!todo.getUser().getUsername().equals(userDetails.getUsername())) {
+            throw new AccessDeniedException("해당 할 일에 대한 삭제 권한이 없습니다.");
+        }
+
         todoService.deleteTodo(id);
         return ResponseEntity.noContent().build();
     }

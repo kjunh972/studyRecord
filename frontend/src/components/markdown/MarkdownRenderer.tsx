@@ -6,6 +6,12 @@ interface MarkdownRendererProps {
   content: string;
 }
 
+interface CodeComponentProps {
+  inline?: boolean;
+  children?: React.ReactNode;
+  className?: string;
+}
+
 export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
   const { theme } = useTheme()
 
@@ -77,7 +83,8 @@ export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
               </table>
             </div>
           ),
-          code: ({ inline, children, className }) => {
+          code: (props: CodeComponentProps & { children?: React.ReactNode }) => {
+            const { inline, children, className } = props;
             const match = /language-(\w+)/.exec(className || '')
             return !inline && match ? (
               <pre style={{ 
@@ -86,7 +93,9 @@ export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
                 padding: '1em',
                 margin: '1em 0'
               }}>
-                <code className={className}>{children}</code>
+                <code className={className}>
+                  {children}
+                </code>
               </pre>
             ) : (
               <code 

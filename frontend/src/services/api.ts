@@ -1,9 +1,15 @@
 import axios from 'axios'
 import { StudyRecord, Todo, TodoRequest } from '../types'
+import React from 'react'
+import { createRoot } from 'react-dom/client'
+import { SessionExpiredAlert } from '../components/SessionExpiredAlert'
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:4000',
-  withCredentials: true
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  }
 })
 
 // 요청 인터셉터
@@ -24,17 +30,21 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // 401 Unauthorized 에러 처리
-    if (error.response?.status === 401) {
-      // 로컬 스토리지의 토큰 제거
-      localStorage.removeItem('token')
-      // ��재 페이지가 로그인 페이지가 아닐 경우에만 리다이렉트
+    if (
+      error.response?.status === 401 || 
+      error.response?.status === 403 ||
+      error.message?.includes('JWT expired')
+    ) {
+      localStorage.removeItem('token');
+      
       if (!window.location.pathname.includes('/login')) {
-        // 강제 새로고침으로 상태 초기화 및 리다이렉트
-        window.location.replace('/login')
+        const div = document.createElement('div');
+        document.body.appendChild(div);
+        const root = createRoot(div);
+        root.render(React.createElement(SessionExpiredAlert));
       }
     }
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
 );
 
@@ -75,7 +85,9 @@ export const studyRecordApi = {
 
 export const todoApi = {
   getAll: () => api.get<Todo[]>('/todos'),
-  create: (todo: TodoRequest) => api.post<Todo>('/todos', todo),
+  create: (todo: TodoRequest) => {
+    return api.post<Todo>('/todos', todo);
+  },
   update: (id: number, todo: Partial<Todo>) => api.put<Todo>(`/todos/${id}`, todo),
   delete: (id: number) => api.delete(`/todos/${id}`),
 }
