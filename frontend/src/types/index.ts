@@ -23,25 +23,25 @@ export interface StudyRecord {
 export interface Todo {
   id: number;
   title: string;
-  dueDate: string;
-  startDate?: string;
-  startTime?: string;
-  endTime?: string;
+  dueDate: string | null;
+  startDate?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
   period?: TodoPeriod;
   completed: boolean;
   createdAt: string;
   updatedAt: string;
-  location?: string;
+  location?: string | null;
   tags: string[];
 }
 
 export interface TodoRequest {
   title: string;
-  dueDate?: string;
-  startDate?: string;
-  startTime?: string;
-  endTime?: string;
-  location?: string;
+  dueDate?: string | null;
+  startDate?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  location?: string | null;
   tags?: string[];
 }
 

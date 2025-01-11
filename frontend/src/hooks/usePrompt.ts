@@ -1,25 +1,39 @@
 import { useEffect, useCallback, useState } from 'react'
 import { useNavigate, useBlocker } from 'react-router-dom'
 
-export function usePrompt(message: string, when = true) {
+interface PromptMessage {
+  title: string;
+  content: string;
+  confirmText: string;
+  cancelText?: string;
+}
+
+export function usePrompt(content: string, shouldPrompt: boolean) {
   const navigate = useNavigate()
   const [showDialog, setShowDialog] = useState(false)
   const [nextLocation, setNextLocation] = useState<string | null>(null)
   const [isBlocking, setIsBlocking] = useState(false)
+  
+  const message: PromptMessage = {
+    title: '페이지 이동 확인',
+    content,
+    confirmText: '나가기',
+    cancelText: '취소'
+  }
 
   const handleBeforeUnload = useCallback(
     (e: BeforeUnloadEvent) => {
-      if (when) {
+      if (shouldPrompt) {
         e.preventDefault()
-        return message
+        return message.content
       }
     },
-    [when, message]
+    [shouldPrompt, message.content]
   )
 
   const handleBlock = useCallback(
     ({ currentLocation, nextLocation }: { currentLocation: any, nextLocation: any }) => {
-      if (when && !isBlocking && nextLocation.pathname !== currentLocation.pathname) {
+      if (shouldPrompt && !isBlocking && nextLocation.pathname !== currentLocation.pathname) {
         setIsBlocking(true)
         setShowDialog(true)
         setNextLocation(nextLocation.pathname)
@@ -27,7 +41,7 @@ export function usePrompt(message: string, when = true) {
       }
       return false
     },
-    [when, isBlocking]
+    [shouldPrompt, isBlocking]
   )
 
   const handleConfirm = useCallback(() => {
@@ -47,11 +61,11 @@ export function usePrompt(message: string, when = true) {
   useBlocker(handleBlock)
 
   useEffect(() => {
-    if (when) {
+    if (shouldPrompt) {
       window.addEventListener('beforeunload', handleBeforeUnload)
       return () => window.removeEventListener('beforeunload', handleBeforeUnload)
     }
-  }, [when, handleBeforeUnload])
+  }, [shouldPrompt, handleBeforeUnload])
 
   return {
     showDialog,

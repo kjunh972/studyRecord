@@ -18,6 +18,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [showAllRecords, setShowAllRecords] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,14 +40,13 @@ export default function HomePage() {
     }
   }, [isAuthenticated])
 
-  // 데이터 가�오기
+  // 데이터 가져오기
   const fetchTodos = async () => {
     try {
       const response = await todoApi.getAll();
-      console.log('API Response:', response.data);  // API 응답 확인
       setTodos(response.data);
     } catch (error) {
-      console.error('Failed to fetch todos:', error);
+      setErrorMessage('할 일 목록을 불러오는 중 오류가 발생했습니다.');
     }
   };
 
