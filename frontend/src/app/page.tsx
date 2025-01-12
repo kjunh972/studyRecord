@@ -1,10 +1,8 @@
-"use client"
-
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { StudyRecord, Todo } from '../types'
 import TodoList from '../components/TodoList'
-import { Card, CardContent, Typography, Button, Box, Chip } from '@mui/material'
+import { Card, CardContent, Typography, Button, Box, Chip, Alert } from '@mui/material'
 import { studyRecordApi, todoApi } from '../services/api'
 import { useTheme } from '../hooks/useTheme'
 import { FileX, PlusCircle, LogIn, ChevronDown, ChevronUp, ArrowDownCircle, ArrowUpCircle } from 'lucide-react'
@@ -93,10 +91,6 @@ export default function HomePage() {
   // 5일치와 전 레코드를 각각 그룹화
   const recentGroupedRecords = groupRecordsByDate(filteredRecords);
   const allGroupedRecords = groupRecordsByDate(filteredRecords, true);
-
-  const handleTagClick = (tag: string) => {
-    setSelectedTag(selectedTag === tag ? null : tag)
-  }
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>
@@ -292,28 +286,32 @@ export default function HomePage() {
                             {new Date(record.createdAt).toLocaleDateString()}
                           </Typography>
                           <Box sx={{ minHeight: '32px', mb: 2 }}>
-                            {record.tags.length > 0 ? (
-                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                {record.tags.map((tag) => (
+                            {record.tags.length > 0 && (
+                              <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                {record.tags.map((tag, index) => (
                                   <Chip
-                                    key={tag}
+                                    key={index}
                                     label={`#${tag}`}
-                                    onClick={() => handleTagClick(tag)}
-                                    sx={{
-                                      bgcolor: selectedTag === tag ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.1)',
-                                      color: selectedTag === tag ? '#ffffff' : 'hsl(var(--primary))',
-                                      border: '1px solid hsl(var(--primary) / 0.2)',
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedTag(selectedTag === tag ? null : tag);
+                                    }}
+                                    sx={{ 
+                                      bgcolor: selectedTag === tag ? 'hsl(var(--primary))' : 'hsl(var(--secondary))',
+                                      color: selectedTag === tag ? 'hsl(var(--primary-foreground))' : 'hsl(var(--secondary-foreground))',
+                                      borderRadius: 'var(--radius)',
+                                      height: '24px',
+                                      fontSize: '0.875rem',
                                       cursor: 'pointer',
-                                      '&:hover': { transform: 'scale(1.05)' },
-                                      transition: 'all 0.2s'
+                                      '&:hover': {
+                                        bgcolor: selectedTag === tag 
+                                          ? 'hsl(var(--primary) / 0.9)'
+                                          : 'hsl(var(--secondary) / 0.9)'
+                                      }
                                     }}
                                   />
                                 ))}
                               </Box>
-                            ) : (
-                              <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                                태그 없음
-                              </Typography>
                             )}
                           </Box>
                           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
@@ -347,11 +345,11 @@ export default function HomePage() {
                   size="small"
                   endIcon={showAllRecords ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   sx={{
-                    borderColor: 'hsl(var(--border))',
-                    color: 'hsl(var(--foreground))',
-                    '&:hover': {
-                      borderColor: 'hsl(var(--border))',
-                      bgcolor: 'hsl(var(--accent))'
+                    borderColor: '#3B82F6',
+                    color: '#3B82F6',
+                    '&:hover': { 
+                      borderColor: '#3B82F6',
+                      backgroundColor: 'rgba(59, 130, 246, 0.1)'
                     }
                   }}
                 >
@@ -423,6 +421,11 @@ export default function HomePage() {
           </Card>
         )}
       </section>
+      {errorMessage && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {errorMessage}
+        </Alert>
+      )}
     </div>
   )
 }
