@@ -7,6 +7,10 @@ import { studyRecordApi, todoApi } from '../services/api'
 import { useTheme } from '../hooks/useTheme'
 import { FileX, PlusCircle, LogIn, ChevronDown, ChevronUp, ArrowDownCircle, ArrowUpCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { ko } from 'date-fns/locale';  // 한국어 로케일
 
 export default function HomePage() {
   const { theme } = useTheme()
@@ -17,6 +21,7 @@ export default function HomePage() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [showAllRecords, setShowAllRecords] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,12 +97,458 @@ export default function HomePage() {
   const recentGroupedRecords = groupRecordsByDate(filteredRecords);
   const allGroupedRecords = groupRecordsByDate(filteredRecords, true);
 
+  // 선택된 날짜의 데이터를 필터링하는 함수들 추가
+  const getFilteredRecordsByDate = (date: Date | null) => {
+    if (!date) return [];
+    
+    // 선택된 날짜의 시작과 끝 설정
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    return studyRecords.filter(record => {
+      const recordDate = new Date(record.createdAt);
+      return recordDate >= startOfDay && recordDate <= endOfDay;
+    });
+  };
+
+  const getFilteredTodosByDate = (date: Date | null) => {
+    if (!date) return [];
+    
+    // 선택된 날짜의 시작과 끝 설정
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    return todos.filter(todo => {
+      if (!todo.dueDate) return false;
+      const todoDueDate = new Date(todo.dueDate);
+      // 시간대를 고려하여 날짜 비교
+      return todoDueDate >= startOfDay && todoDueDate <= endOfDay;
+    });
+  };
+
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>
   }
 
   return (
     <div className="container mx-auto p-4 space-y-8">
+      <section>
+        <Typography variant="h4" sx={{ 
+          fontWeight: 700, 
+          color: 'hsl(var(--foreground))',
+          mb: 4 
+        }}>
+          STUDY CALENDAR
+        </Typography>
+        <Card sx={{ 
+          bgcolor: 'hsl(var(--background))',
+          borderRadius: '12px',
+          border: '1px solid hsl(var(--border))',
+          mb: 8,
+          overflow: 'hidden',
+          boxShadow: 'none',
+          pb: 6,
+          display: 'flex'
+        }}>
+          <Box sx={{ 
+            width: '300px',
+            borderRight: '1px solid hsl(var(--border))',
+            p: 3
+          }}>
+            {selectedDate && (
+              <>
+                <Typography variant="h6" sx={{ 
+                  mb: 3, 
+                  color: 'hsl(var(--foreground))',
+                  pb: 2,
+                  borderBottom: '1px solid hsl(var(--border))'
+                }}>
+                  {selectedDate.toLocaleDateString()}
+                </Typography>
+                
+                <Box sx={{ mb: 4 }}>
+                  <Typography variant="subtitle2" sx={{ 
+                    color: 'hsl(var(--primary))',
+                    mb: 2,
+                    fontWeight: 600
+                  }}>
+                    학습 기록
+                  </Typography>
+                  {getFilteredRecordsByDate(selectedDate).length > 0 ? (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      {getFilteredRecordsByDate(selectedDate).map(record => (
+                        <Link 
+                          key={record.id} 
+                          to={`/study/${record.id}`}
+                          style={{ textDecoration: 'none' }}
+                        >
+                          <Typography sx={{ 
+                            color: 'hsl(var(--foreground))',
+                            fontSize: '0.875rem',
+                            p: 1,
+                            borderRadius: 1,
+                            '&:hover': { 
+                              bgcolor: 'hsl(var(--accent))',
+                              color: 'hsl(var(--accent-foreground))'
+                            }
+                          }}>
+                            {record.title}
+                          </Typography>
+                        </Link>
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography sx={{ 
+                      color: 'hsl(var(--muted-foreground))',
+                      fontSize: '0.875rem'
+                    }}>
+                      학습 기록이 없습니다.
+                    </Typography>
+                  )}
+                </Box>
+
+                <Box>
+                  <Typography variant="subtitle2" sx={{ 
+                    color: '#EF4444',
+                    mb: 2,
+                    fontWeight: 600
+                  }}>
+                    할 일
+                  </Typography>
+                  {getFilteredTodosByDate(selectedDate).length > 0 ? (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      {getFilteredTodosByDate(selectedDate).map(todo => {
+                        const isOverdue = !todo.completed && todo.dueDate && new Date(todo.dueDate) < new Date();
+                        
+                        return (
+                          <Typography 
+                            key={todo.id} 
+                            component="div"
+                            onClick={() => {
+                              const todoSection = document.getElementById('todo-section');
+                              if (todoSection) {
+                                todoSection.scrollIntoView({ behavior: 'smooth' });
+                                // 약간의 지연 후 탭 변경
+                                setTimeout(() => {
+                                  // TodoList 컴포넌트의 탭 상태를 변경하는 이벤트 발생
+                                  const event = new CustomEvent('switchTab', { 
+                                    detail: { tab: todo.completed ? 1 : 0 } 
+                                  });
+                                  window.dispatchEvent(event);
+                                }, 500);
+                              }
+                            }}
+                            sx={{ 
+                              color: 'hsl(var(--foreground))',
+                              fontSize: '0.875rem',
+                              p: 1,
+                              borderRadius: 1,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 0.5,
+                              position: 'relative',
+                              textDecoration: todo.completed ? 'line-through' : 'none',
+                              opacity: todo.completed ? 0.7 : 1,
+                              border: isOverdue ? '1px solid #EF4444' : 'none',
+                              bgcolor: isOverdue ? 'rgba(239, 68, 68, 0.1)' : 'transparent',
+                              cursor: 'pointer',
+                              '&:hover': {
+                                bgcolor: 'hsl(var(--accent))',
+                              }
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box sx={{ 
+                                width: 4,
+                                height: 4,
+                                borderRadius: '50%',
+                                bgcolor: todo.completed ? '#94A3B8' : '#EF4444'
+                              }} />
+                              {todo.title}
+                            </Box>
+                            {(todo.startDate || todo.startTime || todo.endTime) && (
+                              <Box sx={{ 
+                                pl: 2,
+                                fontSize: '0.75rem',
+                                color: 'hsl(var(--muted-foreground))'
+                              }}>
+                                {todo.startDate && (
+                                  <span>
+                                    {new Date(todo.startDate).toLocaleDateString('ko-KR', {
+                                      year: 'numeric',
+                                      month: '2-digit',
+                                      day: '2-digit'
+                                    }).replace(/\. /g, '/')}
+                                    {todo.startTime && ` ${todo.startTime.slice(0, 5)}`}
+                                  </span>
+                                )}
+                                {(todo.startDate || todo.startTime) && todo.endTime && (
+                                  <span> ~ </span>
+                                )}
+                                {todo.dueDate && todo.endTime && (
+                                  <span>
+                                    {todo.dueDate !== todo.startDate ? 
+                                      new Date(todo.dueDate).toLocaleDateString('ko-KR', {
+                                        year: 'numeric',
+                                        month: '2-digit',
+                                        day: '2-digit'
+                                      }).replace(/\. /g, '/') + ' ' : ''
+                                    }
+                                    {todo.endTime.slice(0, 5)}
+                                  </span>
+                                )}
+                              </Box>
+                            )}
+                          </Typography>
+                        );
+                      })}
+                    </Box>
+                  ) : (
+                    <Typography sx={{ 
+                      color: 'hsl(var(--muted-foreground))',
+                      fontSize: '0.875rem'
+                    }}>
+                      할 일이 없습니다.
+                    </Typography>
+                  )}
+                </Box>
+              </>
+            )}
+          </Box>
+
+          <Box sx={{ flex: 1 }}>
+            <Box sx={{ 
+              p: 2, 
+              display: 'flex', 
+              gap: 3,
+              borderBottom: '1px solid hsl(var(--border))',
+              color: 'hsl(var(--muted-foreground))',
+              fontSize: '0.875rem'
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ 
+                  width: '6px', 
+                  height: '6px', 
+                  borderRadius: '50%', 
+                  bgcolor: '#3B82F6' 
+                }} />
+                <span>학습 기록</span>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ 
+                  width: '6px', 
+                  height: '6px', 
+                  borderRadius: '50%', 
+                  bgcolor: '#EF4444' 
+                }} />
+                <span>할 일 마감일</span>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ 
+                  width: '6px', 
+                  height: '6px', 
+                  borderRadius: '50%', 
+                  bgcolor: '#94A3B8'  // 회색으로 변경
+                }} />
+                <span>완료된 할 일</span>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ 
+                  width: '24px', 
+                  height: '24px', 
+                  border: '2px solid #EF4444',
+                  borderRadius: '4px',
+                  opacity: 0.5
+                }} />
+                <span>기한 지난 할 일</span>
+              </Box>
+            </Box>
+            <CardContent sx={{ p: '0 !important' }}>
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ko}>
+                <DateCalendar 
+                  value={selectedDate}
+                  onChange={(newDate) => {
+                    if (newDate) {
+                      // 시간대 문제를 해결하기 위해 시간을 정오로 설정
+                      const date = new Date(newDate);
+                      date.setHours(12, 0, 0, 0);
+                      setSelectedDate(date);
+                    }
+                  }}
+                  slots={{
+                    day: (props) => {
+                      const date = props.day;
+                      // 해당 날짜의 시작과 끝 설정
+                      const startOfDay = new Date(date);
+                      startOfDay.setHours(0, 0, 0, 0);
+                      const endOfDay = new Date(date);
+                      endOfDay.setHours(23, 59, 59, 999);
+
+                      // 학습 기록 확인
+                      const hasRecord = studyRecords.some(record => {
+                        const recordDate = new Date(record.createdAt);
+                        return recordDate >= startOfDay && recordDate <= endOfDay;
+                      });
+
+                      // 할 일 마감일 확인
+                      const hasTodo = todos.some(todo => {
+                        if (!todo.dueDate) return false;
+                        const todoDueDate = new Date(todo.dueDate);
+                        const startOfDay = new Date(date);
+                        startOfDay.setHours(0, 0, 0, 0);
+                        const endOfDay = new Date(date);
+                        endOfDay.setHours(23, 59, 59, 999);
+                        return todoDueDate >= startOfDay && todoDueDate <= endOfDay;
+                      });
+
+                      // 기한이 지난 미완료 할 일 확인
+                      const hasOverdueTodo = todos.some(todo => {
+                        if (!todo.dueDate || todo.completed) return false;
+                        const todoDueDate = new Date(todo.dueDate);
+                        const today = new Date();
+                        const dateToCheck = new Date(date);
+                        
+                        // 시간을 00:00:00으로 설정하여 날짜만 비교
+                        todoDueDate.setHours(0, 0, 0, 0);
+                        today.setHours(0, 0, 0, 0);
+                        dateToCheck.setHours(0, 0, 0, 0);
+                        
+                        // 해당 날짜가 마감일이고, 오늘보다 이전인 경우
+                        return todoDueDate.getTime() === dateToCheck.getTime() && 
+                               todoDueDate.getTime() < today.getTime();
+                      });
+
+                      const isToday = props.day.toDateString() === new Date().toDateString();
+                      
+                      return (
+                        <Box
+                          component="button"
+                          onClick={(e) => {
+                            e.preventDefault();  // 기본 이벤트 방지
+                            if (props.onClick) {
+                              props.onClick(e);  // 기존 onClick 호출
+                            }
+                            // 직접 날짜 설정
+                            const date = new Date(props.day);
+                            date.setHours(12, 0, 0, 0);
+                            setSelectedDate(date);
+                          }}
+                          sx={{
+                            position: 'relative',
+                            width: '48px',
+                            height: '48px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            border: isToday ? '2px solid #3B82F6' : 'none',
+                            padding: 0,
+                            background: 'none',
+                            borderRadius: '8px',
+                            backgroundColor: props.selected ? '#3B82F6' : 'transparent',
+                            color: props.selected ? 'white' : 'hsl(var(--foreground))',
+                            opacity: props.outsideCurrentMonth ? 0.5 : 1,
+                            fontWeight: isToday ? 600 : 400,
+                            '&:hover': {
+                              backgroundColor: props.selected ? '#2563EB' : 'rgba(59, 130, 246, 0.1)',
+                            },
+                            // 기한이 지난 날짜 표시 (테두리)
+                            ...(hasOverdueTodo && {
+                              border: '2px solid #EF4444',
+                              opacity: 0.8
+                            }),
+                            // 학습 기록 표시 (파란 점)
+                            '&::after': hasRecord ? {
+                              content: '""',
+                              position: 'absolute',
+                              bottom: 4,
+                              left: hasTodo ? '40%' : '50%',
+                              transform: 'translateX(-50%)',
+                              width: '6px',
+                              height: '6px',
+                              borderRadius: '50%',
+                              bgcolor: props.selected ? 'white' : '#3B82F6',
+                              zIndex: 1
+                            } : {},
+                            // 할 일 마감일 표시 (빨간 점)
+                            '&::before': hasTodo ? {
+                              content: '""',
+                              position: 'absolute',
+                              bottom: 4,
+                              left: hasRecord ? '60%' : '50%',
+                              transform: 'translateX(-50%)',
+                              width: '6px',
+                              height: '6px',
+                              borderRadius: '50%',
+                              bgcolor: props.selected 
+                                ? 'white' 
+                                : (todos.filter(todo => {
+                                    if (!todo.dueDate) return false;
+                                    const todoDueDate = new Date(todo.dueDate);
+                                    const dateToCheck = new Date(date);
+                                    todoDueDate.setHours(0, 0, 0, 0);
+                                    dateToCheck.setHours(0, 0, 0, 0);
+                                    return todoDueDate.getTime() === dateToCheck.getTime();
+                                  }).every(todo => todo.completed)  // 해당 날짜의 모든 할 일이 완료되었는지 확인
+                                    ? '#94A3B8'  // 모든 할 일이 완료됨 -> 회색
+                                    : '#EF4444'  // 미완료된 할 일이 있음 -> 빨간색
+                                ),
+                              zIndex: 1
+                            } : {}
+                          }}
+                        >
+                          {props.day.getDate()}
+                        </Box>
+                      );
+                    }
+                  }}
+                  sx={{
+                    width: '100%',
+                    p: 2,
+                    pb: 6,
+                    '& .MuiDayCalendar-weekDayLabel': {
+                      color: 'hsl(var(--muted-foreground))',
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      width: '48px',
+                      height: '48px',
+                      margin: '4px 0'
+                    },
+                    '& .MuiPickersCalendarHeader-label': {
+                      color: 'hsl(var(--foreground))',
+                      fontSize: '1.1rem',
+                      fontWeight: 600,
+                      textTransform: 'none'
+                    },
+                    '& .MuiPickersCalendarHeader-switchViewButton': {
+                      display: 'none'
+                    },
+                    '& .MuiPickersArrowSwitcher-button': {
+                      color: 'hsl(var(--foreground))',
+                      '&:hover': {
+                        bgcolor: 'rgba(59, 130, 246, 0.1)'
+                      }
+                    },
+                    '& .MuiDayCalendar-header': {
+                      borderBottom: 'none',
+                      marginBottom: '8px'
+                    },
+                    '& .MuiPickersCalendarHeader-root': {
+                      paddingLeft: '16px',
+                      paddingRight: '16px'
+                    }
+                  }}
+                />
+              </LocalizationProvider>
+            </CardContent>
+          </Box>
+        </Card>
+      </section>
+
       <section>
         <div className="flex justify-between items-center mb-6">
           <Typography variant="h4" sx={{ fontWeight: 700, color: 'hsl(var(--foreground))' }}>
