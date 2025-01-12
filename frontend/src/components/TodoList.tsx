@@ -83,6 +83,18 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
   );
 
   useEffect(() => {
+    const handleTabSwitch = (e: CustomEvent) => {
+      setCurrentTab(e.detail.tab);
+    };
+
+    window.addEventListener('switchTab', handleTabSwitch as EventListener);
+    
+    return () => {
+      window.removeEventListener('switchTab', handleTabSwitch as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
   }, [todos]);
 
   const isValidDateRange = (
