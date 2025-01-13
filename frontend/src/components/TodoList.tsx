@@ -10,7 +10,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { TimePicker } from '@mui/x-date-pickers/TimePicker'
-import { Plus, Trash2, FileX, Edit, X } from 'lucide-react'
+import { Plus, Trash2, Edit, X, ChevronDown, ChevronUp } from 'lucide-react'
 import { NavigationPrompt } from '../components/NavigationPrompt'
 
 interface TodoListProps {
@@ -61,6 +61,7 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
     confirmText: '',
     cancelText: ''
   });
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
 
   const sortByDueDate = (todos: Todo[]) => {
     return [...todos].sort((a, b) => {
@@ -96,6 +97,15 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
 
   useEffect(() => {
   }, [todos]);
+
+  useEffect(() => {
+    // 초기 렌더링 시에만 모든 그룹을 펼침
+    if (expandedGroups.length === 0) {
+      const inProgressDates = groupTodosByDueDate(inProgressTodos).map(([date]) => date);
+      const completedDates = groupTodosByDueDate(completedTodos).map(([date]) => date);
+      setExpandedGroups([...inProgressDates, ...completedDates]);
+    }
+  }, [expandedGroups.length, inProgressTodos, completedTodos]); // 의존성 추가
 
   const isValidDateRange = (
     startDate: string | null | undefined, 
@@ -249,6 +259,41 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
     }
   };
 
+  const groupTodosByDueDate = (todos: Todo[]) => {
+    const groups = todos.reduce((acc, todo) => {
+      if (!todo.dueDate) {
+        if (!acc['마감일 없음']) acc['마감일 없음'] = [];
+        acc['마감일 없음'].push(todo);
+        return acc;
+      }
+
+      const date = new Date(todo.dueDate).toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).replace(/\. /g, '/');
+
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(todo);
+      return acc;
+    }, {} as Record<string, Todo[]>);
+
+    // 날짜순으로 정렬 (마감일 없음은 항상 마지막에)
+    return Object.entries(groups).sort((a, b) => {
+      if (a[0] === '마감일 없음') return 1;
+      if (b[0] === '마감일 없음') return -1;
+      return new Date(a[0].replace(/\//g, '-')).getTime() - new Date(b[0].replace(/\//g, '-')).getTime();
+    });
+  };
+
+  const toggleGroup = (date: string) => {
+    setExpandedGroups(prev => 
+      prev.includes(date)
+        ? prev.filter(d => d !== date)
+        : [...prev, date]
+    );
+  };
+
   return (
     <Box>
       <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
@@ -311,8 +356,13 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
         sx={{ 
           mb: 2,
           borderBottom: '1px solid hsl(var(--border))',
+          '& .MuiTabs-indicator': {
+            backgroundColor: 'hsl(var(--primary))',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+          },
           '& .MuiTab-root': {
             color: 'hsl(var(--muted-foreground))',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             '&.Mui-selected': {
               color: 'hsl(var(--foreground))'
             }
@@ -324,354 +374,455 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
           id="todo-tab-0"
         />
         <Tab 
-          label={`완료됨 (${completedTodos.length})`} 
+          label={`완료됨 (${completedTodos.length})`}
           id="todo-tab-1"
         />
       </Tabs>
 
-      <Dialog 
-        open={openDialog} 
-        onClose={() => setOpenDialog(false)}
-        PaperProps={{
-          sx: {
-            width: '100%',
-            maxWidth: 500,
-            bgcolor: 'hsl(var(--background))',
-            border: '1px solid hsl(var(--border))'
-          }
+      <Box
+        sx={{
+          position: 'relative',
+          minHeight: 200  // 최소 높이 설정
         }}
       >
-        <DialogTitle>New Todo</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-            <TextField
-              fullWidth
-              label="할 일 *"
-              value={todoForm.title}
-              onChange={(e) => {
-                setTodoForm({ ...todoForm, title: e.target.value });
-                setFormErrors({ ...formErrors, title: false });
-              }}
-              error={formErrors.title}
-              helperText={formErrors.title ? '할 일을 입력해주세요' : ''}
-            />
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <DatePicker
-                  label="시작일"
-                  value={todoForm.startDate ? new Date(todoForm.startDate) : null}
-                  onChange={(date) => {
-                    if (date) {
-                      const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
-                        .toISOString()
-                        .split('T')[0];
-                      setTodoForm({ 
-                        ...todoForm, 
-                        startDate: localDate
-                      });
-                    } else {
-                      setTodoForm({
-                        ...todoForm,
-                        startDate: undefined
-                      });
-                    }
-                  }}
-                  format="yyyy/MM/dd"
-                />
-                <DatePicker
-                  label="마감일"
-                  value={todoForm.dueDate ? new Date(todoForm.dueDate) : null}
-                  onChange={(date) => {
-                    if (date) {
-                      const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
-                        .toISOString()
-                        .split('T')[0];
-                      setTodoForm({ 
-                        ...todoForm, 
-                        dueDate: localDate
-                      });
-                      setFormErrors({ ...formErrors, dueDate: false });
-                    } else {
-                      setTodoForm({
-                        ...todoForm,
-                        dueDate: undefined
-                      });
-                    }
-                  }}
-                  format="yyyy/MM/dd"
-                  slotProps={{
-                    textField: {
-                      required: true,
-                      error: formErrors.dueDate,
-                      helperText: formErrors.dueDate ? '마감일은 필수입니다' : ''
-                    }
-                  }}
-                />
-              </Box>
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                <Box sx={{ flex: 1, position: 'relative' }}>
-                  <TimePicker
-                    label="시작 시간"
-                    value={todoForm.startTime ? new Date(`1970-01-01T${todoForm.startTime}`) : null}
-                    onChange={(time) => {
-                      if (time) {
-                        const localTime = time.toLocaleTimeString('en-US', {
-                          hour12: false,
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        });
-                        setTodoForm({
-                          ...todoForm,
-                          startTime: localTime
-                        });
-                      } else {
-                        setTodoForm({
-                          ...todoForm,
-                          startTime: undefined
-                        });
-                      }
-                    }}
-                    sx={{ width: '100%' }}
-                  />
-                  {todoForm.startTime && (
-                    <IconButton 
-                      size="small"
-                      onClick={() => setTodoForm({ ...todoForm, startTime: undefined })}
-                      sx={{ 
-                        position: 'absolute',
-                        right: 32,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        color: 'hsl(var(--muted-foreground))',
-                        '&:hover': {
-                          color: 'hsl(var(--destructive))',
-                          bgcolor: 'transparent'
-                        }
-                      }}
-                    >
-                      <X size={16} />
-                    </IconButton>
-                  )}
-                </Box>
-                <Box sx={{ flex: 1, position: 'relative' }}>
-                  <TimePicker
-                    label="종료 시간"
-                    value={todoForm.endTime ? new Date(`1970-01-01T${todoForm.endTime}`) : null}
-                    onChange={(time) => {
-                      if (time) {
-                        const localTime = time.toLocaleTimeString('en-US', {
-                          hour12: false,
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        });
-                        setTodoForm({
-                          ...todoForm,
-                          endTime: localTime
-                        });
-                      } else {
-                        setTodoForm({
-                          ...todoForm,
-                          endTime: undefined
-                        });
-                      }
-                    }}
-                    sx={{ width: '100%' }}
-                  />
-                  {todoForm.endTime && (
-                    <IconButton 
-                      size="small"
-                      onClick={() => setTodoForm({ ...todoForm, endTime: undefined })}
-                      sx={{ 
-                        position: 'absolute',
-                        right: 32,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        color: 'hsl(var(--muted-foreground))',
-                        '&:hover': {
-                          color: 'hsl(var(--destructive))',
-                          bgcolor: 'transparent'
-                        }
-                      }}
-                    >
-                      <X size={16} />
-                    </IconButton>
-                  )}
-                </Box>
-              </Box>
-            </LocalizationProvider>
-            <TextField
-              fullWidth
-              label="장소"
-              value={todoForm.location}
-              onChange={(e) => setTodoForm({ ...todoForm, location: e.target.value })}
-              placeholder="예: 집, 카페"
-            />
-            <TextField
-              fullWidth
-              label="태그"
-              value={todoForm.tags?.join(', ') || ''}
-              onChange={(e) => {
-                const tags = e.target.value
-                  .split(',')
-                  .map(tag => tag.trim())
-                  .filter(tag => tag);
-                setTodoForm({ ...todoForm, tags });
-              }}
-              placeholder="쉼표(,)로 구분하여 입력"
-              helperText="예시: 공부, 과제, 프로젝트"
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setOpenDialog(false)}>취소</Button>
-          <Button onClick={handleAddTodo} variant="contained">추가</Button>
-        </DialogActions>
-      </Dialog>
-
-      {todos.length === 0 ? (
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center',
-          py: 4,
-          color: 'text.secondary'
-        }}>
-          <FileX size={48} strokeWidth={1.5} />
-          <Typography sx={{ mt: 2 }}>
-            할 일 목록이 비어있습니다
-          </Typography>
-        </Box>
-      ) : (
-        <List sx={{ width: '100%' }}>
-          {(currentTab === 0 ? inProgressTodos : completedTodos).map((todo) => {
-            return (
-              <ListItem
-                key={todo.id}
-                sx={{
+        <Box
+          sx={{
+            display: currentTab === 0 ? 'block' : 'none',
+            opacity: currentTab === 0 ? 1 : 0,
+            transform: `translateX(${currentTab === 0 ? 0 : -20}px)`,
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        >
+          {groupTodosByDueDate(currentTab === 0 ? inProgressTodos : completedTodos).map(([date, todos]) => (
+            <Box key={date} sx={{ mb: 4 }}>
+              <Box
+                onClick={() => toggleGroup(date)}
+                sx={{ 
                   display: 'flex',
-                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  borderBottom: '1px solid hsl(var(--border))',
-                  py: 1.5,
-                  px: 2,
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  mb: 1.5,
+                  py: 0.5,
+                  px: 1,
                   '&:hover': {
-                    bgcolor: 'hsl(var(--accent))'
+                    color: 'hsl(var(--primary))'
                   }
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
-                  <Checkbox
-                    checked={todo.completed}
-                    onChange={() => handleToggleTodo(todo.id)}
-                    sx={{
+                <Typography 
+                  variant="subtitle2"
+                  sx={{ 
+                    color: 'hsl(var(--muted-foreground))',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                  }}
+                >
+                  {date}
+                  <Typography 
+                    component="span" 
+                    sx={{ 
                       color: 'hsl(var(--muted-foreground))',
-                      '&.Mui-checked': {
-                        color: 'hsl(var(--primary))'
-                      }
+                      fontSize: '0.75rem',
+                      opacity: 0.8
                     }}
-                  />
-                  <Box>
-                    <Typography
-                      sx={{
-                        textDecoration: todo.completed ? 'line-through' : 'none',
-                        color: todo.completed ? 'text.secondary' : 'text.primary',
-                        mb: 0.5
-                      }}
-                    >
-                      {todo.title}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                      {todo.startDate && `${formatDate(todo.startDate)}`}
-                      {todo.startTime && ` ${formatTime(todo.startTime)}`}
-                      {(todo.dueDate || todo.endTime) && ' ~ '}
-                      {todo.dueDate && `${formatDate(todo.dueDate)}`}
-                      {todo.endTime && ` ${formatTime(todo.endTime)}`}
-                    </Typography>
-                    {todo.location && (
-                      <Box 
-                        sx={{ 
-                          display: 'inline-flex',
+                  >
+                    ({todos.length})
+                  </Typography>
+                </Typography>
+                {expandedGroups.includes(date) ? (
+                  <ChevronUp size={16} />
+                ) : (
+                  <ChevronDown size={16} />
+                )}
+              </Box>
+              {expandedGroups.includes(date) && (
+                <List sx={{ width: '100%' }}>
+                  {todos.map((todo) => {
+                    return (
+                      <ListItem
+                        key={todo.id}
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
                           alignItems: 'center',
-                          gap: 1,
-                          bgcolor: 'hsl(var(--muted) / 0.3)',
-                          py: 0.5,
-                          px: 1,
-                          borderRadius: 'var(--radius)',
-                          mt: 0.5
+                          borderBottom: '1px solid hsl(var(--border))',
+                          py: 1.5,
+                          px: 2,
+                          ...((!todo.completed && todo.dueDate && new Date(todo.dueDate) < new Date()) && {
+                            bgcolor: 'hsl(var(--destructive) / 0.1)',
+                            borderLeft: '4px solid hsl(var(--destructive))',
+                            '&:hover': {
+                              bgcolor: 'hsl(var(--destructive) / 0.15)'
+                            }
+                          }),
+                          '&:hover': {
+                            bgcolor: 'hsl(var(--accent))'
+                          }
                         }}
                       >
-                        <Typography 
-                          variant="caption" 
-                          color="text.secondary"
-                          sx={{ 
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.5
-                          }}
-                        >
-                          <span style={{ fontWeight: 500 }}>장소:</span> {todo.location}
-                        </Typography>
-                      </Box>
-                    )}
-                    {todo.tags && todo.tags.length > 0 && (
-                      <Box sx={{ mt: 0.5, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                        {todo.tags.map((tag, index) => (
-                          <Chip
-                            key={index}
-                            label={`#${tag}`}
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();  // 상위 요소로의 이벤트 전파 방지
-                              setSelectedTag(selectedTag === tag ? null : tag);
-                            }}
-                            sx={{ 
-                              bgcolor: selectedTag === tag ? 'hsl(var(--primary))' : 'hsl(var(--secondary))',
-                              color: selectedTag === tag ? 'hsl(var(--primary-foreground))' : 'hsl(var(--secondary-foreground))',
-                              borderRadius: 'var(--radius)',
-                              height: '20px',
-                              fontSize: '0.75rem',
-                              cursor: 'pointer',
-                              '&:hover': {
-                                bgcolor: selectedTag === tag 
-                                  ? 'hsl(var(--primary) / 0.9)'
-                                  : 'hsl(var(--secondary) / 0.9)'
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+                          <Checkbox
+                            checked={todo.completed}
+                            onChange={() => handleToggleTodo(todo.id)}
+                            sx={{
+                              color: 'hsl(var(--muted-foreground))',
+                              '&.Mui-checked': {
+                                color: 'hsl(var(--primary))'
                               }
                             }}
                           />
-                        ))}
-                      </Box>
-                    )}
-                  </Box>
-                </Box>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <IconButton 
-                    onClick={() => handleEditClick(todo)}
+                          <Box sx={{ flex: 1 }}>
+                            <Typography
+                              sx={{
+                                textDecoration: todo.completed ? 'line-through' : 'none',
+                                color: todo.completed 
+                                  ? 'text.secondary' 
+                                  : (todo.dueDate && new Date(todo.dueDate) < new Date())
+                                    ? 'hsl(var(--destructive))'
+                                    : 'text.primary',
+                                mb: 0.5,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1
+                              }}
+                            >
+                              {todo.title}
+                              {!todo.completed && todo.dueDate && new Date(todo.dueDate) < new Date() && (
+                                <Chip
+                                  label="기한 초과"
+                                  size="small"
+                                  sx={{ 
+                                    bgcolor: 'hsl(var(--destructive))',
+                                    color: 'hsl(var(--destructive-foreground))',
+                                    height: '20px',
+                                    fontSize: '0.75rem'
+                                  }}
+                                />
+                              )}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                              {todo.startDate && `${formatDate(todo.startDate)}`}
+                              {todo.startTime && ` ${formatTime(todo.startTime)}`}
+                              {(todo.dueDate || todo.endTime) && ' ~ '}
+                              {todo.dueDate && `${formatDate(todo.dueDate)}`}
+                              {todo.endTime && ` ${formatTime(todo.endTime)}`}
+                            </Typography>
+                            {todo.location && (
+                              <Box 
+                                sx={{ 
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 1,
+                                  bgcolor: 'hsl(var(--muted) / 0.3)',
+                                  py: 0.5,
+                                  px: 1,
+                                  borderRadius: 'var(--radius)',
+                                  mt: 0.5
+                                }}
+                              >
+                                <Typography 
+                                  variant="caption" 
+                                  color="text.secondary"
+                                  sx={{ 
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 0.5
+                                  }}
+                                >
+                                  <span style={{ fontWeight: 500 }}>장소:</span> {todo.location}
+                                </Typography>
+                              </Box>
+                            )}
+                            {todo.tags && todo.tags.length > 0 && (
+                              <Box sx={{ mt: 0.5, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                                {todo.tags.map((tag, index) => (
+                                  <Chip
+                                    key={index}
+                                    label={`#${tag}`}
+                                    size="small"
+                                    onClick={(e) => {
+                                      e.stopPropagation();  // 상위 요소로의 이벤트 전파 방지
+                                      setSelectedTag(selectedTag === tag ? null : tag);
+                                    }}
+                                    sx={{ 
+                                      bgcolor: selectedTag === tag ? 'hsl(var(--primary))' : 'hsl(var(--secondary))',
+                                      color: selectedTag === tag ? 'hsl(var(--primary-foreground))' : 'hsl(var(--secondary-foreground))',
+                                      borderRadius: 'var(--radius)',
+                                      height: '20px',
+                                      fontSize: '0.75rem',
+                                      cursor: 'pointer',
+                                      '&:hover': {
+                                        bgcolor: selectedTag === tag 
+                                          ? 'hsl(var(--primary) / 0.9)'
+                                          : 'hsl(var(--secondary) / 0.9)'
+                                      }
+                                    }}
+                                  />
+                                ))}
+                              </Box>
+                            )}
+                          </Box>
+                        </Box>
+
+                        <Box sx={{ 
+                          display: 'flex', 
+                          gap: 1,
+                          ml: 2  // 내용과의 간격
+                        }}>
+                          <IconButton 
+                            onClick={() => handleEditClick(todo)}
+                            sx={{ 
+                              color: 'hsl(var(--muted-foreground))',
+                              '&:hover': {
+                                color: 'primary.main'
+                              }
+                            }}
+                          >
+                            <Edit size={18} />
+                          </IconButton>
+                          <IconButton 
+                            onClick={() => handleDeleteClick(todo.id)}
+                            sx={{ 
+                              color: 'hsl(var(--muted-foreground))',
+                              '&:hover': {
+                                color: 'error.main'
+                              }
+                            }}
+                          >
+                            <Trash2 size={18} />
+                          </IconButton>
+                        </Box>
+                      </ListItem>
+                    );
+                  })}
+                </List>
+              )}
+            </Box>
+          ))}
+        </Box>
+
+        <Box
+          sx={{
+            display: currentTab === 1 ? 'block' : 'none',
+            opacity: currentTab === 1 ? 1 : 0,
+            transform: `translateX(${currentTab === 1 ? 0 : 20}px)`,
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        >
+          {groupTodosByDueDate(currentTab === 0 ? inProgressTodos : completedTodos).map(([date, todos]) => (
+            <Box key={date} sx={{ mb: 4 }}>
+              <Box
+                onClick={() => toggleGroup(date)}
+                sx={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  mb: 1.5,
+                  py: 0.5,
+                  px: 1,
+                  '&:hover': {
+                    color: 'hsl(var(--primary))'
+                  }
+                }}
+              >
+                <Typography 
+                  variant="subtitle2"
+                  sx={{ 
+                    color: 'hsl(var(--muted-foreground))',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                  }}
+                >
+                  {date}
+                  <Typography 
+                    component="span" 
                     sx={{ 
                       color: 'hsl(var(--muted-foreground))',
-                      '&:hover': {
-                        color: 'primary.main'
-                      }
+                      fontSize: '0.75rem',
+                      opacity: 0.8
                     }}
                   >
-                    <Edit size={18} />
-                  </IconButton>
-                  <IconButton 
-                    onClick={() => handleDeleteClick(todo.id)}
-                    sx={{ 
-                      color: 'hsl(var(--muted-foreground))',
-                      '&:hover': {
-                        color: 'error.main'
-                      }
-                    }}
-                  >
-                    <Trash2 size={18} />
-                  </IconButton>
-                </Box>
-              </ListItem>
-            );
-          })}
-        </List>
-      )}
+                    ({todos.length})
+                  </Typography>
+                </Typography>
+                {expandedGroups.includes(date) ? (
+                  <ChevronUp size={16} />
+                ) : (
+                  <ChevronDown size={16} />
+                )}
+              </Box>
+              {expandedGroups.includes(date) && (
+                <List sx={{ width: '100%' }}>
+                  {todos.map((todo) => {
+                    return (
+                      <ListItem
+                        key={todo.id}
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          borderBottom: '1px solid hsl(var(--border))',
+                          py: 1.5,
+                          px: 2,
+                          ...((!todo.completed && todo.dueDate && new Date(todo.dueDate) < new Date()) && {
+                            bgcolor: 'hsl(var(--destructive) / 0.1)',
+                            borderLeft: '4px solid hsl(var(--destructive))',
+                            '&:hover': {
+                              bgcolor: 'hsl(var(--destructive) / 0.15)'
+                            }
+                          }),
+                          '&:hover': {
+                            bgcolor: 'hsl(var(--accent))'
+                          }
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+                          <Checkbox
+                            checked={todo.completed}
+                            onChange={() => handleToggleTodo(todo.id)}
+                            sx={{
+                              color: 'hsl(var(--muted-foreground))',
+                              '&.Mui-checked': {
+                                color: 'hsl(var(--primary))'
+                              }
+                            }}
+                          />
+                          <Box sx={{ flex: 1 }}>
+                            <Typography
+                              sx={{
+                                textDecoration: todo.completed ? 'line-through' : 'none',
+                                color: todo.completed 
+                                  ? 'text.secondary' 
+                                  : (todo.dueDate && new Date(todo.dueDate) < new Date())
+                                    ? 'hsl(var(--destructive))'
+                                    : 'text.primary',
+                                mb: 0.5,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1
+                              }}
+                            >
+                              {todo.title}
+                              {!todo.completed && todo.dueDate && new Date(todo.dueDate) < new Date() && (
+                                <Chip
+                                  label="기한 초과"
+                                  size="small"
+                                  sx={{ 
+                                    bgcolor: 'hsl(var(--destructive))',
+                                    color: 'hsl(var(--destructive-foreground))',
+                                    height: '20px',
+                                    fontSize: '0.75rem'
+                                  }}
+                                />
+                              )}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                              {todo.startDate && `${formatDate(todo.startDate)}`}
+                              {todo.startTime && ` ${formatTime(todo.startTime)}`}
+                              {(todo.dueDate || todo.endTime) && ' ~ '}
+                              {todo.dueDate && `${formatDate(todo.dueDate)}`}
+                              {todo.endTime && ` ${formatTime(todo.endTime)}`}
+                            </Typography>
+                            {todo.location && (
+                              <Box 
+                                sx={{ 
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 1,
+                                  bgcolor: 'hsl(var(--muted) / 0.3)',
+                                  py: 0.5,
+                                  px: 1,
+                                  borderRadius: 'var(--radius)',
+                                  mt: 0.5
+                                }}
+                              >
+                                <Typography 
+                                  variant="caption" 
+                                  color="text.secondary"
+                                  sx={{ 
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 0.5
+                                  }}
+                                >
+                                  <span style={{ fontWeight: 500 }}>장소:</span> {todo.location}
+                                </Typography>
+                              </Box>
+                            )}
+                            {todo.tags && todo.tags.length > 0 && (
+                              <Box sx={{ mt: 0.5, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                                {todo.tags.map((tag, index) => (
+                                  <Chip
+                                    key={index}
+                                    label={`#${tag}`}
+                                    size="small"
+                                    onClick={(e) => {
+                                      e.stopPropagation();  // 상위 요소로의 이벤트 전파 방지
+                                      setSelectedTag(selectedTag === tag ? null : tag);
+                                    }}
+                                    sx={{ 
+                                      bgcolor: selectedTag === tag ? 'hsl(var(--primary))' : 'hsl(var(--secondary))',
+                                      color: selectedTag === tag ? 'hsl(var(--primary-foreground))' : 'hsl(var(--secondary-foreground))',
+                                      borderRadius: 'var(--radius)',
+                                      height: '20px',
+                                      fontSize: '0.75rem',
+                                      cursor: 'pointer',
+                                      '&:hover': {
+                                        bgcolor: selectedTag === tag 
+                                          ? 'hsl(var(--primary) / 0.9)'
+                                          : 'hsl(var(--secondary) / 0.9)'
+                                      }
+                                    }}
+                                  />
+                                ))}
+                              </Box>
+                            )}
+                          </Box>
+                        </Box>
+
+                        <Box sx={{ 
+                          display: 'flex', 
+                          gap: 1,
+                          ml: 2  // 내용과의 간격
+                        }}>
+                          <IconButton 
+                            onClick={() => handleEditClick(todo)}
+                            sx={{ 
+                              color: 'hsl(var(--muted-foreground))',
+                              '&:hover': {
+                                color: 'primary.main'
+                              }
+                            }}
+                          >
+                            <Edit size={18} />
+                          </IconButton>
+                          <IconButton 
+                            onClick={() => handleDeleteClick(todo.id)}
+                            sx={{ 
+                              color: 'hsl(var(--muted-foreground))',
+                              '&:hover': {
+                                color: 'error.main'
+                              }
+                            }}
+                          >
+                            <Trash2 size={18} />
+                          </IconButton>
+                        </Box>
+                      </ListItem>
+                    );
+                  })}
+                </List>
+              )}
+            </Box>
+          ))}
+        </Box>
+      </Box>
 
       <Dialog
         open={deleteDialogOpen}

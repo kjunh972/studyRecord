@@ -172,9 +172,10 @@ export default function HomePage() {
                 
                 <Box sx={{ mb: 4 }}>
                   <Typography variant="subtitle2" sx={{ 
-                    color: 'hsl(var(--primary))',
+                    color: 'hsl(var(--foreground))',
                     mb: 2,
-                    fontWeight: 600
+                    fontWeight: 600,
+                    fontSize: '1rem'
                   }}>
                     학습 기록
                   </Typography>
@@ -188,14 +189,23 @@ export default function HomePage() {
                         >
                           <Typography sx={{ 
                             color: 'hsl(var(--foreground))',
-                            fontSize: '0.875rem',
+                            fontSize: '0.92rem',
                             p: 1,
                             borderRadius: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
                             '&:hover': { 
                               bgcolor: 'hsl(var(--accent))',
                               color: 'hsl(var(--accent-foreground))'
                             }
                           }}>
+                            <Box sx={{ 
+                              width: 4,
+                              height: 4,
+                              borderRadius: '50%',
+                              bgcolor: '#3B82F6'
+                            }} />
                             {record.title}
                           </Typography>
                         </Link>
@@ -213,9 +223,10 @@ export default function HomePage() {
 
                 <Box>
                   <Typography variant="subtitle2" sx={{ 
-                    color: '#EF4444',
+                    color: 'hsl(var(--foreground))',
                     mb: 2,
-                    fontWeight: 600
+                    fontWeight: 600,
+                    fontSize: '1rem'
                   }}>
                     할 일
                   </Typography>
@@ -244,7 +255,7 @@ export default function HomePage() {
                             }}
                             sx={{ 
                               color: 'hsl(var(--foreground))',
-                              fontSize: '0.875rem',
+                              fontSize: '0.92rem',
                               p: 1,
                               borderRadius: 1,
                               display: 'flex',
@@ -268,7 +279,11 @@ export default function HomePage() {
                                 borderRadius: '50%',
                                 bgcolor: todo.completed ? '#94A3B8' : '#EF4444'
                               }} />
-                              {todo.title}
+                              <Typography sx={{ 
+                                color: 'hsl(var(--foreground))'
+                              }}>
+                                {todo.title}
+                              </Typography>
                             </Box>
                             {(todo.startDate || todo.startTime || todo.endTime) && (
                               <Box sx={{ 
