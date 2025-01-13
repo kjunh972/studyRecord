@@ -475,21 +475,21 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
                             }}
                           />
                           <Box sx={{ flex: 1 }}>
-                            <Typography
-                              sx={{
-                                textDecoration: todo.completed ? 'line-through' : 'none',
-                                color: todo.completed 
-                                  ? 'text.secondary' 
-                                  : (todo.dueDate && new Date(todo.dueDate) < new Date())
-                                    ? 'hsl(var(--destructive))'
-                                    : 'text.primary',
+                            <Box 
+                              component="div"  // Typography 대신 Box 사용
+                              sx={{ 
                                 mb: 0.5,
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: 1
+                                gap: 1,
+                                color: 'hsl(var(--foreground))',
+                                fontSize: '1rem',  // Typography의 기본 스타일 유지
+                                fontWeight: 400
                               }}
                             >
-                              {todo.title}
+                              <Box component="span">
+                                {todo.title}
+                              </Box>
                               {!todo.completed && todo.dueDate && new Date(todo.dueDate) < new Date() && (
                                 <Chip
                                   label="기한 초과"
@@ -502,7 +502,7 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
                                   }}
                                 />
                               )}
-                            </Typography>
+                            </Box>
                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                               {todo.startDate && `${formatDate(todo.startDate)}`}
                               {todo.startTime && ` ${formatTime(todo.startTime)}`}
@@ -537,28 +537,17 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
                               </Box>
                             )}
                             {todo.tags && todo.tags.length > 0 && (
-                              <Box sx={{ mt: 0.5, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                              <Box component="span" sx={{ display: 'flex', gap: 0.5 }}>
                                 {todo.tags.map((tag, index) => (
                                   <Chip
                                     key={index}
                                     label={`#${tag}`}
                                     size="small"
-                                    onClick={(e) => {
-                                      e.stopPropagation();  // 상위 요소로의 이벤트 전파 방지
-                                      setSelectedTag(selectedTag === tag ? null : tag);
-                                    }}
-                                    sx={{ 
-                                      bgcolor: selectedTag === tag ? 'hsl(var(--primary))' : 'hsl(var(--secondary))',
-                                      color: selectedTag === tag ? 'hsl(var(--primary-foreground))' : 'hsl(var(--secondary-foreground))',
-                                      borderRadius: 'var(--radius)',
+                                    sx={{
                                       height: '20px',
                                       fontSize: '0.75rem',
-                                      cursor: 'pointer',
-                                      '&:hover': {
-                                        bgcolor: selectedTag === tag 
-                                          ? 'hsl(var(--primary) / 0.9)'
-                                          : 'hsl(var(--secondary) / 0.9)'
-                                      }
+                                      bgcolor: 'hsl(var(--secondary))',
+                                      color: 'hsl(var(--secondary-foreground))'
                                     }}
                                   />
                                 ))}
@@ -694,21 +683,21 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
                             }}
                           />
                           <Box sx={{ flex: 1 }}>
-                            <Typography
-                              sx={{
-                                textDecoration: todo.completed ? 'line-through' : 'none',
-                                color: todo.completed 
-                                  ? 'text.secondary' 
-                                  : (todo.dueDate && new Date(todo.dueDate) < new Date())
-                                    ? 'hsl(var(--destructive))'
-                                    : 'text.primary',
+                            <Box 
+                              component="div"  // Typography 대신 Box 사용
+                              sx={{ 
                                 mb: 0.5,
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: 1
+                                gap: 1,
+                                color: 'hsl(var(--foreground))',
+                                fontSize: '1rem',  // Typography의 기본 스타일 유지
+                                fontWeight: 400
                               }}
                             >
-                              {todo.title}
+                              <Box component="span">
+                                {todo.title}
+                              </Box>
                               {!todo.completed && todo.dueDate && new Date(todo.dueDate) < new Date() && (
                                 <Chip
                                   label="기한 초과"
@@ -721,7 +710,7 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
                                   }}
                                 />
                               )}
-                            </Typography>
+                            </Box>
                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                               {todo.startDate && `${formatDate(todo.startDate)}`}
                               {todo.startTime && ` ${formatTime(todo.startTime)}`}
@@ -756,28 +745,17 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
                               </Box>
                             )}
                             {todo.tags && todo.tags.length > 0 && (
-                              <Box sx={{ mt: 0.5, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                              <Box component="span" sx={{ display: 'flex', gap: 0.5 }}>
                                 {todo.tags.map((tag, index) => (
                                   <Chip
                                     key={index}
                                     label={`#${tag}`}
                                     size="small"
-                                    onClick={(e) => {
-                                      e.stopPropagation();  // 상위 요소로의 이벤트 전파 방지
-                                      setSelectedTag(selectedTag === tag ? null : tag);
-                                    }}
-                                    sx={{ 
-                                      bgcolor: selectedTag === tag ? 'hsl(var(--primary))' : 'hsl(var(--secondary))',
-                                      color: selectedTag === tag ? 'hsl(var(--primary-foreground))' : 'hsl(var(--secondary-foreground))',
-                                      borderRadius: 'var(--radius)',
+                                    sx={{
                                       height: '20px',
                                       fontSize: '0.75rem',
-                                      cursor: 'pointer',
-                                      '&:hover': {
-                                        bgcolor: selectedTag === tag 
-                                          ? 'hsl(var(--primary) / 0.9)'
-                                          : 'hsl(var(--secondary) / 0.9)'
-                                      }
+                                      bgcolor: 'hsl(var(--secondary))',
+                                      color: 'hsl(var(--secondary-foreground))'
                                     }}
                                   />
                                 ))}

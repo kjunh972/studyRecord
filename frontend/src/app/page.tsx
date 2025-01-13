@@ -157,7 +157,22 @@ export default function HomePage() {
           <Box sx={{ 
             width: '300px',
             borderRight: '1px solid hsl(var(--border))',
-            p: 3
+            p: 3,
+            maxHeight: '600px',  
+            overflow: 'auto',    
+            '&::-webkit-scrollbar': {  
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'hsl(var(--muted-foreground) / 0.2)',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb:hover': {
+              background: 'hsl(var(--muted-foreground) / 0.3)',
+            }
           }}>
             {selectedDate && (
               <>
@@ -187,19 +202,14 @@ export default function HomePage() {
                           to={`/study/${record.id}`}
                           style={{ textDecoration: 'none' }}
                         >
-                          <Typography sx={{ 
-                            color: 'hsl(var(--foreground))',
-                            fontSize: '0.92rem',
-                            p: 1,
-                            borderRadius: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            '&:hover': { 
-                              bgcolor: 'hsl(var(--accent))',
-                              color: 'hsl(var(--accent-foreground))'
-                            }
-                          }}>
+                          <Box
+                            sx={{ 
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                              color: 'hsl(var(--foreground))'
+                            }}
+                          >
                             <Box sx={{ 
                               width: 4,
                               height: 4,
@@ -207,7 +217,7 @@ export default function HomePage() {
                               bgcolor: '#3B82F6'
                             }} />
                             {record.title}
-                          </Typography>
+                          </Box>
                         </Link>
                       ))}
                     </Box>
@@ -236,7 +246,7 @@ export default function HomePage() {
                         const isOverdue = !todo.completed && todo.dueDate && new Date(todo.dueDate) < new Date();
                         
                         return (
-                          <Typography 
+                          <Box
                             key={todo.id} 
                             component="div"
                             onClick={() => {
@@ -279,11 +289,16 @@ export default function HomePage() {
                                 borderRadius: '50%',
                                 bgcolor: todo.completed ? '#94A3B8' : '#EF4444'
                               }} />
-                              <Typography sx={{ 
-                                color: 'hsl(var(--foreground))'
-                              }}>
+                              <Box
+                                sx={{ 
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1,
+                                  color: 'hsl(var(--foreground))'
+                                }}
+                              >
                                 {todo.title}
-                              </Typography>
+                              </Box>
                             </Box>
                             {(todo.startDate || todo.startTime || todo.endTime) && (
                               <Box sx={{ 
@@ -318,7 +333,7 @@ export default function HomePage() {
                                 )}
                               </Box>
                             )}
-                          </Typography>
+                          </Box>
                         );
                       })}
                     </Box>
@@ -388,7 +403,6 @@ export default function HomePage() {
                   value={selectedDate}
                   onChange={(newDate) => {
                     if (newDate) {
-                      // 시간대 문제를 해결하기 위해 시간을 정오로 설정
                       const date = new Date(newDate);
                       date.setHours(12, 0, 0, 0);
                       setSelectedDate(date);
@@ -525,6 +539,18 @@ export default function HomePage() {
                     width: '100%',
                     p: 2,
                     pb: 6,
+                    overflow: 'hidden',
+                    '& .MuiPickersCalendarHeader-root': {
+                      paddingLeft: '16px',
+                      paddingRight: '16px',
+                      overflow: 'hidden'
+                    },
+                    '& .MuiDayCalendar-monthContainer': {
+                      overflow: 'hidden'
+                    },
+                    '& .MuiDayCalendar-slideTransition': {
+                      overflow: 'hidden'
+                    },
                     '& .MuiDayCalendar-weekDayLabel': {
                       color: 'hsl(var(--muted-foreground))',
                       fontSize: '0.875rem',
@@ -551,10 +577,6 @@ export default function HomePage() {
                     '& .MuiDayCalendar-header': {
                       borderBottom: 'none',
                       marginBottom: '8px'
-                    },
-                    '& .MuiPickersCalendarHeader-root': {
-                      paddingLeft: '16px',
-                      paddingRight: '16px'
                     }
                   }}
                 />

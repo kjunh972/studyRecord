@@ -55,13 +55,77 @@ export default function StudyRecordPage() {
       return <MarkdownRenderer content={record.content} />
     } else {
       return (
-        <div style={{ 
-          whiteSpace: 'pre-wrap',
-          padding: '1rem',
-          lineHeight: '1.7'
+        <Box sx={{ 
+          '& .ql-editor': {
+            padding: 0,
+            '& > *': { marginBottom: '1em' },
+            '& h1': { 
+              fontSize: '2em',
+              marginBottom: '0.5em',
+              fontWeight: 'bold'
+            },
+            '& h2': { 
+              fontSize: '1.5em',
+              marginBottom: '0.5em',
+              fontWeight: 'bold'
+            },
+            '& h3': { 
+              fontSize: '1.17em',
+              marginBottom: '0.5em',
+              fontWeight: 'bold'
+            },
+            '& pre.ql-syntax': {
+              backgroundColor: 'hsl(var(--accent))',
+              color: 'hsl(var(--accent-foreground))',
+              padding: '1em',
+              borderRadius: '4px',
+              fontFamily: 'monospace',
+              whiteSpace: 'pre-wrap',
+              marginBottom: '1em',
+              display: 'block'
+            },
+            '& a': {
+              color: '#0066cc',
+              textDecoration: 'underline',
+              '&:hover': {
+                color: '#0052a3'
+              }
+            },
+            '& ul, & ol': {
+              paddingLeft: '2em',
+              marginBottom: '1em'
+            },
+            '& li': {
+              marginBottom: '0.5em'
+            },
+            '& blockquote': {
+              borderLeft: '4px solid hsl(var(--border))',
+              paddingLeft: '1em',
+              marginLeft: '0',
+              marginBottom: '1em',
+              color: 'hsl(var(--muted-foreground))'
+            },
+            '& code': {
+              backgroundColor: 'hsl(var(--accent))',
+              padding: '0.2em 0.4em',
+              borderRadius: '3px',
+              fontFamily: 'monospace'
+            },
+            '& img': {
+              maxWidth: '100%',
+              height: 'auto'
+            },
+            '& *:last-child': {
+              marginBottom: 0
+            }
+          }
         }}>
-          {record.content}
-        </div>
+          <div 
+            className="ql-editor"
+            dangerouslySetInnerHTML={{ __html: record.content }}
+            style={{ color: 'hsl(var(--foreground))' }}
+          />
+        </Box>
       )
     }
   }
