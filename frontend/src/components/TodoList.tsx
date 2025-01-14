@@ -96,16 +96,13 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
   }, []);
 
   useEffect(() => {
-  }, [todos]);
-
-  useEffect(() => {
     // 초기 렌더링 시에만 모든 그룹을 펼침
     if (expandedGroups.length === 0) {
       const inProgressDates = groupTodosByDueDate(inProgressTodos).map(([date]) => date);
       const completedDates = groupTodosByDueDate(completedTodos).map(([date]) => date);
       setExpandedGroups([...inProgressDates, ...completedDates]);
     }
-  }, [expandedGroups.length, inProgressTodos, completedTodos]); // 의존성 추가
+  }, []);
 
   const isValidDateRange = (
     startDate: string | null | undefined, 
@@ -154,6 +151,22 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
     try {
       const response = await todoApi.create(todoForm);
       setTodos([...todos, response.data]);
+      
+      if (response.data.dueDate) {
+        const newDueDate = new Date(response.data.dueDate).toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).replace(/\. /g, '/');
+        
+        if (!expandedGroups.includes(newDueDate)) {
+          setExpandedGroups(prev => [...prev, newDueDate]);
+        }
+      } else {
+        if (!expandedGroups.includes('마감일 없음')) {
+          setExpandedGroups(prev => [...prev, '마감일 없음']);
+        }
+      }
       
       setTodoForm({
         title: '',
@@ -1048,6 +1061,191 @@ export default function TodoList({ todos, setTodos }: TodoListProps) {
           {errorMessage}
         </Alert>
       </Snackbar>
+
+      <Dialog 
+        open={openDialog} 
+        onClose={() => setOpenDialog(false)}
+        PaperProps={{
+          sx: {
+            width: '100%',
+            maxWidth: 500,
+            bgcolor: 'hsl(var(--background))',
+            border: '1px solid hsl(var(--border))'
+          }
+        }}
+      >
+        <DialogTitle>새로운 할 일</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+            <TextField
+              fullWidth
+              label="할 일 *"
+              value={todoForm.title}
+              onChange={(e) => setTodoForm({ ...todoForm, title: e.target.value })}
+              error={formErrors.title}
+              helperText={formErrors.title ? '할 일을 입력해주세요' : ''}
+            />
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <DatePicker
+                  label="시작일"
+                  value={todoForm.startDate ? new Date(todoForm.startDate) : null}
+                  onChange={(date) => {
+                    if (date) {
+                      const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
+                        .toISOString()
+                        .split('T')[0];
+                      setTodoForm({ 
+                        ...todoForm, 
+                        startDate: localDate
+                      });
+                    } else {
+                      setTodoForm({
+                        ...todoForm,
+                        startDate: undefined
+                      });
+                    }
+                  }}
+                  format="yyyy/MM/dd"
+                />
+                <DatePicker
+                  label="마감일"
+                  value={todoForm.dueDate ? new Date(todoForm.dueDate) : null}
+                  onChange={(date) => {
+                    if (date) {
+                      const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
+                        .toISOString()
+                        .split('T')[0];
+                      setTodoForm({ 
+                        ...todoForm, 
+                        dueDate: localDate
+                      });
+                    } else {
+                      setTodoForm({
+                        ...todoForm,
+                        dueDate: undefined
+                      });
+                    }
+                  }}
+                  format="yyyy/MM/dd"
+                  slotProps={{
+                    textField: {
+                      required: true,
+                      error: formErrors.dueDate,
+                      helperText: formErrors.dueDate ? '마감일은 필수입니다' : ''
+                    }
+                  }}
+                />
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <Box sx={{ flex: 1, position: 'relative' }}>
+                  <TimePicker
+                    label="시작 시간"
+                    value={todoForm.startTime ? new Date(`1970-01-01T${todoForm.startTime}`) : null}
+                    onChange={(time) => {
+                      setTodoForm({
+                        ...todoForm,
+                        startTime: time ? time.toLocaleTimeString('en-US', {
+                          hour12: false,
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : undefined
+                      });
+                    }}
+                    sx={{ width: '100%' }}
+                  />
+                  {todoForm.startTime && (
+                    <IconButton 
+                      size="small"
+                      onClick={() => setTodoForm({ ...todoForm, startTime: undefined })}
+                      sx={{ 
+                        position: 'absolute',
+                        right: 32,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: 'hsl(var(--muted-foreground))',
+                        '&:hover': {
+                          color: 'hsl(var(--destructive))',
+                          bgcolor: 'transparent'
+                        }
+                      }}
+                    >
+                      <X size={16} />
+                    </IconButton>
+                  )}
+                </Box>
+                <Box sx={{ flex: 1, position: 'relative' }}>
+                  <TimePicker
+                    label="종료 시간"
+                    value={todoForm.endTime ? new Date(`1970-01-01T${todoForm.endTime}`) : null}
+                    onChange={(time) => {
+                      setTodoForm({
+                        ...todoForm,
+                        endTime: time ? time.toLocaleTimeString('en-US', {
+                          hour12: false,
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : undefined
+                      });
+                    }}
+                    sx={{ width: '100%' }}
+                  />
+                  {todoForm.endTime && (
+                    <IconButton 
+                      size="small"
+                      onClick={() => setTodoForm({ ...todoForm, endTime: undefined })}
+                      sx={{ 
+                        position: 'absolute',
+                        right: 32,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: 'hsl(var(--muted-foreground))',
+                        '&:hover': {
+                          color: 'hsl(var(--destructive))',
+                          bgcolor: 'transparent'
+                        }
+                      }}
+                    >
+                      <X size={16} />
+                    </IconButton>
+                  )}
+                </Box>
+              </Box>
+            </LocalizationProvider>
+            <TextField
+              fullWidth
+              label="장소"
+              value={todoForm.location || ''}
+              onChange={(e) => setTodoForm({ ...todoForm, location: e.target.value })}
+              placeholder="예: 집, 카페"
+            />
+            <TextField
+              fullWidth
+              label="태그"
+              value={todoForm.tags?.join(', ') || ''}
+              onChange={(e) => {
+                const tags = e.target.value
+                  .split(',')
+                  .map(tag => tag.trim())
+                  .filter(tag => tag);
+                setTodoForm({ ...todoForm, tags });
+              }}
+              placeholder="쉼표(,)로 구분하여 입력"
+              helperText="예시: 공부, 과제, 프로젝트"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setOpenDialog(false)}>취소</Button>
+          <Button 
+            onClick={handleAddTodo}
+            variant="contained"
+            disabled={!todoForm.title.trim()}
+          >
+            추가
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <NavigationPrompt
         open={showDialog}
