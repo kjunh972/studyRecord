@@ -5,57 +5,80 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.studyrecord.backend.service.UserService;
-import com.studyrecord.backend.domain.User;
 import com.studyrecord.backend.dto.*;
 import com.studyrecord.backend.security.CustomUserDetails;
-import org.springframework.http.HttpStatus;
 import com.studyrecord.backend.dto.ErrorResponse;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import io.swagger.v3.oas.annotations.Parameter;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/users/{userId}")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class UserController {
     private final UserService userService;
 
-    @GetMapping("/me")
-    public ResponseEntity<UserResponse> getMyInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        User user = userService.getUserById(userDetails.getId());
-        return ResponseEntity.ok(UserResponse.from(user));
+    @GetMapping
+    public ResponseEntity<UserResponse> getMyInfo(
+            @Parameter(description = "사용자 ID") @PathVariable Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new AccessDeniedException("로그인이 필요한 서비스입니다.");
+        }
+        if (!userDetails.getId().equals(userId)) {
+            throw new AccessDeniedException("다른 사용자의 정보에 접근할 수 없습니다.");
+        }
+        return ResponseEntity.ok(userService.getMyInfo(userDetails.getUsername()));
+    }
+
+    @PatchMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserResponse> updateProfile(
+            @Parameter(description = "사용자 ID") @PathVariable Long userId,
+            @RequestBody UserUpdateRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new AccessDeniedException("로그인이 필요한 서비스입니다.");
+        }
+        if (!userDetails.getId().equals(userId)) {
+            throw new AccessDeniedException("다른 사용자의 프로필을 수정할 수 없습니다.");
+        }
+        return ResponseEntity.ok(userService.updateProfile(request, userDetails.getUsername()));
     }
 
     @PatchMapping("/password")
-    public ResponseEntity<?> updatePassword(
-        @AuthenticationPrincipal CustomUserDetails userDetails,
-        @RequestBody PasswordUpdateRequest request
-    ) {
-        try {
-            userService.updatePassword(userDetails.getId(), request.getCurrentPassword(), request.getNewPassword());
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse(e.getMessage()));
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> updatePassword(
+            @Parameter(description = "사용자 ID") @PathVariable Long userId,
+            @RequestBody PasswordUpdateRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new AccessDeniedException("로그인이 필요한 서비스입니다.");
         }
+        if (!userDetails.getId().equals(userId)) {
+            throw new AccessDeniedException("다른 사용자의 비밀번호를 수정할 수 없습니다.");
+        }
+        userService.updatePassword(request, userDetails.getUsername());
+        return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/profile")
-    public ResponseEntity<UserResponse> updateProfile(
-        @AuthenticationPrincipal CustomUserDetails userDetails,
-        @RequestBody ProfileUpdateRequest request
-    ) {
-        User updatedUser = userService.updateProfile(
-            userDetails.getId(), 
-            request.getName(),
-            request.getPhone(),
-            request.getBirthdate()
-        );
-        return ResponseEntity.ok(UserResponse.from(updatedUser));
-    }
-
-    @DeleteMapping("/me")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteAccount(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        userService.deleteAccount(userDetails.getId());
+    @DeleteMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> deleteAccount(
+            @Parameter(description = "사용자 ID") @PathVariable Long userId,
+            @RequestBody String currentPassword,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new AccessDeniedException("로그인이 필요한 서비스입니다.");
+        }
+        if (!userDetails.getId().equals(userId)) {
+            throw new AccessDeniedException("다른 사용자의 계정을 삭제할 수 없습니다.");
+        }
+        try {
+            userService.deleteAccount(userId, currentPassword);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        }
     }
 } 

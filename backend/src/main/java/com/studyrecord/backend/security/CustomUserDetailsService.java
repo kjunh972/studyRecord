@@ -1,6 +1,6 @@
 package com.studyrecord.backend.security;
 
-import com.studyrecord.backend.domain.User;
+import com.studyrecord.backend.entity.User;
 import com.studyrecord.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,7 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     public UserDetails loadUserById(Long id) {
-        User user = (User) userRepository.findById(id)
+        User user = userRepository.findById(id)
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return new CustomUserDetails(user);
     }

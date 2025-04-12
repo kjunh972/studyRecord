@@ -1,7 +1,8 @@
 package com.studyrecord.backend.repository;
 
-import com.studyrecord.backend.domain.Todo;
-import com.studyrecord.backend.domain.TodoPeriod;
+import com.studyrecord.backend.entity.Todo;
+import com.studyrecord.backend.entity.TodoPeriod;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

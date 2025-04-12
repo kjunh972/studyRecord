@@ -1,6 +1,6 @@
 package com.studyrecord.backend.service;
 
-import com.studyrecord.backend.domain.User;
+import com.studyrecord.backend.entity.User;
 import com.studyrecord.backend.dto.AuthResponse;
 import com.studyrecord.backend.dto.LoginRequest;
 import com.studyrecord.backend.dto.SignUpRequest;
@@ -26,12 +26,13 @@ public class AuthService {
             throw new RuntimeException("이미 존재하는 아이디입니다");
         }
 
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setName(request.getName());
-        user.setPhone(request.getPhone());
-        user.setBirthdate(request.getBirthdate());
+        User user = User.builder()
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .name(request.getName())
+                .phone(request.getPhone())
+                .birthdate(request.getBirthdate())
+                .build();
 
         userRepository.save(user);
     }

@@ -1,4 +1,4 @@
-package com.studyrecord.backend.domain;
+package com.studyrecord.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -25,7 +25,7 @@ public class Todo {
     @Column(nullable = false)
     private String title;
 
-    @Column(name = "due_date", nullable = false)
+    @Column(name = "due_date", nullable = true)
     private LocalDate dueDate;
 
     @Column(name = "start_date")
@@ -37,9 +37,6 @@ public class Todo {
     @Column(name = "end_time")
     private LocalTime endTime;
 
-    @Enumerated(EnumType.STRING)
-    private TodoPeriod period;
-
     @Column(nullable = false)
     private boolean completed = false;
 
@@ -50,4 +47,8 @@ public class Todo {
     @CollectionTable(name = "todo_tags", joinColumns = @JoinColumn(name = "todo_id"))
     @Column(name = "tag")
     private List<String> tags = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TodoPeriod period;
 } 

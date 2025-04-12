@@ -1,9 +1,8 @@
 package com.studyrecord.backend.service;
 
-import com.studyrecord.backend.domain.Todo;
-import com.studyrecord.backend.domain.User;
-import com.studyrecord.backend.dto.TodoRequest;
-import com.studyrecord.backend.dto.TodoResponse;
+import com.studyrecord.backend.entity.Todo;
+import com.studyrecord.backend.entity.User;
+import com.studyrecord.backend.dto.TodoDto;
 import com.studyrecord.backend.repository.TodoRepository;
 import com.studyrecord.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -20,7 +19,7 @@ public class TodoService {
     private final TodoRepository todoRepository;
     private final UserRepository userRepository;
 
-    public List<TodoResponse> getAllTodosByUsername(String username) {
+    public List<TodoDto.Response> getAllTodosByUsername(String username) {
         return todoRepository.findAllByUserUsername(username).stream()
                 .sorted((a, b) -> {
                     // 1. 마감일 null 비교
@@ -38,12 +37,12 @@ public class TodoService {
                     
                     return a.getEndTime().compareTo(b.getEndTime());
                 })
-                .map(TodoResponse::from)
+                .map(TodoDto.Response::from)
                 .collect(Collectors.toList());
     }
 
     @Transactional
-    public TodoResponse createTodo(TodoRequest request, String username) {
+    public TodoDto.Response createTodo(TodoDto.Request request, String username) {
         try {
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
@@ -55,7 +54,6 @@ public class TodoService {
             todo.setStartDate(request.getStartDate());
             todo.setStartTime(request.getStartTime());
             todo.setEndTime(request.getEndTime());
-            todo.setPeriod(request.getPeriod());
             todo.setLocation(request.getLocation());
             
             List<String> tags = request.getTags();
@@ -64,14 +62,14 @@ public class TodoService {
             }
 
             Todo savedTodo = todoRepository.save(todo);
-            return TodoResponse.from(savedTodo);
+            return TodoDto.Response.from(savedTodo);
         } catch (Exception e) {
             throw new RuntimeException("Failed to create todo", e);
         }
     }
 
     @Transactional
-    public TodoResponse updateTodo(Long id, TodoRequest request) {
+    public TodoDto.Response updateTodo(Long id, TodoDto.Request request) {
         Todo todo = todoRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Todo not found with id: " + id));
         
@@ -87,7 +85,7 @@ public class TodoService {
         if (request.getLocation() != null) todo.setLocation(request.getLocation());
         if (request.getTags() != null) todo.setTags(request.getTags());
         
-        return TodoResponse.from(todo);
+        return TodoDto.Response.from(todo);
     }
 
     @Transactional
@@ -102,7 +100,7 @@ public class TodoService {
     }
 
     @Transactional
-    public TodoResponse updateTodoStatus(Long id, Boolean completed) {
+    public TodoDto.Response updateTodoStatus(Long id, Boolean completed) {
         Todo todo = todoRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Todo not found with id: " + id));
         
@@ -112,11 +110,11 @@ public class TodoService {
         // 명시적으로 save 호출
         Todo savedTodo = todoRepository.save(todo);
         
-        return TodoResponse.from(savedTodo);
+        return TodoDto.Response.from(savedTodo);
     }
 
-    public TodoResponse getTodo(Long id) {
+    public TodoDto.Response getTodo(Long id) {
         Todo todo = findTodo(id);
-        return TodoResponse.from(todo);
+        return TodoDto.Response.from(todo);
     }
 } 

@@ -1,6 +1,6 @@
 package com.studyrecord.backend.dto;
 
-import com.studyrecord.backend.domain.User;
+import com.studyrecord.backend.entity.User;
 import lombok.Builder;
 import lombok.Getter;
 
